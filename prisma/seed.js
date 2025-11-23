@@ -15,6 +15,21 @@ async function main() {
       create: b
     })
   }
+
+  const email = process.env.INIT_ADMIN_EMAIL
+  const password = process.env.INIT_ADMIN_PASSWORD
+  if (email && password) {
+    const argon2 = require('argon2')
+    const hash = await argon2.hash(password)
+    await prisma.user.upsert({
+      where: { email },
+      update: {},
+      create: { email, password: hash, role: 'ADMIN', name: 'Owner' }
+    })
+    console.log('Admin user ensured:', email)
+  } else {
+    console.log('INIT_ADMIN_EMAIL/INIT_ADMIN_PASSWORD not set; skipping admin seed')
+  }
 }
 
 main()
