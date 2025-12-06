@@ -1,7 +1,13 @@
 import { prisma } from '@/lib/db'
 import AgreementEditor from '@/components/forms/AgreementEditor'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 export default async function AgreementDetailPage({ params }: { params: { id: string } }) {
+  const session = await auth()
+  if (!session) {
+    redirect(`/login?redirect=/admin/agreement/${params.id}`)
+  }
   const agreement = await prisma.agreement.findUnique({ where: { id: params.id }, include: { customer: true, bike: true } })
   const bikes = await prisma.bike.findMany({ orderBy: { make: 'asc' } })
   if (!agreement) return <div className="text-red-600">Not found</div>

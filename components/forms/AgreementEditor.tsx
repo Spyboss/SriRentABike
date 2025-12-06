@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { diffDays } from '@/lib/utils/dates'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function AgreementEditor({ agreement, bikes }: { agreement: any, bikes: any[] }) {
+  const [bikeFilter, setBikeFilter] = useState('')
   const { register, watch, setValue, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -67,11 +68,19 @@ export default function AgreementEditor({ agreement, bikes }: { agreement: any, 
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <Label>Bike</Label>
+        <Input
+          placeholder="Search by make, model, or plate"
+          value={bikeFilter}
+          onChange={(e) => setBikeFilter(e.target.value)}
+          className="mb-2"
+        />
         <Select {...register('bikeId')}>
           <option value="">Select bike</option>
-          {bikes.map(b => (
-            <option key={b.id} value={b.id}>{b.make} {b.model} ({b.plateNo})</option>
-          ))}
+          {bikes
+            .filter(b => `${b.make} ${b.model} ${b.plateNo}`.toLowerCase().includes(bikeFilter.toLowerCase()))
+            .map(b => (
+              <option key={b.id} value={b.id}>{b.make} {b.model} ({b.plateNo})</option>
+            ))}
         </Select>
         {errors.bikeId && <p className="text-red-600 text-sm">Required</p>}
       </div>
@@ -100,14 +109,14 @@ export default function AgreementEditor({ agreement, bikes }: { agreement: any, 
         </div>
         <div>
           <Label>Fuel Level</Label>
-          <Select {...register('fuelLevel')}>
-            <option value="">Select</option>
-            <option value="E">E</option>
-            <option value="1/4">1/4</option>
-            <option value="1/2">1/2</option>
-            <option value="3/4">3/4</option>
-            <option value="F">F</option>
-          </Select>
+          <div className="flex flex-wrap gap-2">
+            {['E','1/4','1/2','3/4','F'].map(val => (
+              <label key={val} className="inline-flex items-center gap-2 rounded border px-3 py-2 cursor-pointer">
+                <input type="radio" value={val} {...register('fuelLevel')} className="accent-primary" />
+                <span>{val}</span>
+              </label>
+            ))}
+          </div>
           {errors.fuelLevel && <p className="text-red-600 text-sm">Required</p>}
         </div>
       </div>

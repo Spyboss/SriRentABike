@@ -11,9 +11,9 @@ export default function DownloadPdfButton({ data }: { data: any }) {
         <a
           href={url ?? '#'}
           download="rental-agreement.pdf"
-          className={cn(buttonVariants({ variant: 'secondary' }), (loading || !url) && 'opacity-50 pointer-events-none')}
+          className={cn(buttonVariants({ variant: 'secondary' }), (loading || !url || error) && 'opacity-50 pointer-events-none')}
         >
-          {loading ? 'Preparing…' : 'Download PDF'}
+          {error ? 'Unavailable' : loading ? 'Preparing…' : 'Download PDF'}
         </a>
       )}
     </BlobProvider>

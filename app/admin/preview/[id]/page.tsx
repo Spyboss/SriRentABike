@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/db'
 import AgreementPreviewClient from '@/components/pdf/AgreementPreviewClient'
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
 
 function formatDate(dt?: Date | null) {
   if (!dt) return ''
@@ -8,6 +10,10 @@ function formatDate(dt?: Date | null) {
 }
 
 export default async function PreviewPage({ params }: { params: { id: string } }) {
+  const session = await auth()
+  if (!session) {
+    redirect(`/login?redirect=/admin/preview/${params.id}`)
+  }
   const a = await prisma.agreement.findUnique({ where: { id: params.id }, include: { customer: true, bike: true } })
   if (!a) return <div className="text-red-600">Not found</div>
   const data = {

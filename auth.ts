@@ -18,7 +18,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       authorize: async (credentials) => {
         if (!credentials?.email || !credentials?.password) return null
         const user = await (prisma as any).user.findUnique({ where: { email: credentials.email as string } })
-        console.log('auth.credentials.user', { found: !!user })
 
         if (!user || !user.password) return null
         let ok = false
@@ -30,7 +29,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!ok && process.env.INIT_ADMIN_PASSWORD && credentials.password === process.env.INIT_ADMIN_PASSWORD) {
           ok = true
         }
-        console.log('auth.credentials.verify', { ok })
         if (!ok) return null
         return { id: user.id, name: user.name ?? null, email: user.email, role: user.role }
       }

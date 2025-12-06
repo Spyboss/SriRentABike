@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { auth } from '@/auth'
 
 type Params = { params: { id: string } }
 
 export async function GET(_: Request, { params }: Params) {
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const a = await prisma.agreement.findUnique({ where: { id: params.id }, include: { customer: true, bike: true } })
   if (!a) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(a)
 }
 
 export async function PATCH(req: Request, { params }: Params) {
+  const session = await auth()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
   const updated = await prisma.agreement.update({ where: { id: params.id }, data: body })
   return NextResponse.json(updated)

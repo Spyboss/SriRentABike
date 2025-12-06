@@ -1,12 +1,15 @@
-import { NextResponse } from 'next/server'
-export default function middleware(req: any) {
+import { NextResponse, NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
+export default async function middleware(req: NextRequest) {
   const isAdminRoute = req.nextUrl.pathname.startsWith('/admin')
-  const tokenCookie = req.cookies.get('__Secure-next-auth.session-token')?.value || req.cookies.get('next-auth.session-token')?.value
-  if (isAdminRoute && !tokenCookie) {
-    const url = req.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirect', req.nextUrl.pathname + req.nextUrl.search)
-    return NextResponse.redirect(url)
+  if (isAdminRoute) {
+    const token = await getToken({ req })
+    if (!token) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', req.nextUrl.pathname + req.nextUrl.search)
+      return NextResponse.redirect(url)
+    }
   }
 }
 

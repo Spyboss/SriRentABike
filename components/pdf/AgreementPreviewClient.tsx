@@ -3,6 +3,7 @@ import { PDFViewer } from '@react-pdf/renderer'
 import { RentalAgreementDocument } from './RentalAgreementDocument'
 import DownloadPdfButton from './DownloadPdfButton'
 import { Button } from '@/components/ui/button'
+import ErrorBoundary from './ErrorBoundary'
 
 export default function AgreementPreviewClient({ data }: { data: any }) {
   return (
@@ -15,9 +16,11 @@ export default function AgreementPreviewClient({ data }: { data: any }) {
         </div>
       </div>
       <div className="h-[85vh]">
-        <PDFViewer width="100%" height="100%">
-          <RentalAgreementDocument data={data} />
-        </PDFViewer>
+        <ErrorBoundary>
+          <PDFViewer width="100%" height="100%">
+            <RentalAgreementDocument data={data} />
+          </PDFViewer>
+        </ErrorBoundary>
       </div>
     </div>
   )
