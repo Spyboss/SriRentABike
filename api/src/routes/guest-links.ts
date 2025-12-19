@@ -6,7 +6,7 @@ import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth
 const router = express.Router();
 
 // Validate guest token
-router.get('/validate/:token', async (req, res) => {
+router.get('/validate/:token', async (req: express.Request, res: express.Response) => {
   try {
     const { token } = req.params;
 
@@ -66,7 +66,7 @@ router.get('/validate/:token', async (req, res) => {
 });
 
 // Get agreement details by guest token
-router.get('/agreement/:token', async (req, res) => {
+router.get('/agreement/:token', async (req: express.Request, res: express.Response) => {
   try {
     const { token } = req.params;
 
@@ -116,7 +116,7 @@ router.get('/agreement/:token', async (req, res) => {
 });
 
 // Mark guest link as used
-router.post('/use/:token', async (req, res) => {
+router.post('/use/:token', async (req: express.Request, res: express.Response) => {
   try {
     const { token } = req.params;
 
@@ -173,7 +173,7 @@ router.post('/use/:token', async (req, res) => {
 });
 
 // Create a guest link for an existing agreement (admin)
-router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { agreement_id, expires_in_days = 7, max_uses = 1 } = req.body as {
       agreement_id?: string;

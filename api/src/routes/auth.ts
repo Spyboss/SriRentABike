@@ -8,7 +8,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 const router = express.Router();
 
 // Admin login
-router.post('/admin/login', async (req, res) => {
+router.post('/admin/login', async (req: express.Request, res: express.Response) => {
   try {
     const { email, password }: AdminLoginRequest = req.body;
 
@@ -56,12 +56,12 @@ router.post('/admin/login', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', authenticateToken, (req: AuthRequest, res) => {
+router.get('/me', authenticateToken, (req: AuthRequest, res: express.Response) => {
   res.json({ user: req.user });
 });
 
 // Create initial admin user (for development)
-router.post('/setup-admin', async (req, res) => {
+router.post('/setup-admin', async (req: express.Request, res: express.Response) => {
   try {
     const { email, password } = req.body;
 

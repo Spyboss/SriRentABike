@@ -19,7 +19,7 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     const allowed = [
       process.env.FRONTEND_URL || 'http://localhost:5173',
       'http://localhost:5174',
@@ -55,7 +55,7 @@ app.use('/api/bikes', bikesRoutes);
 app.use('/api/settings', settingsRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: express.Request, res: express.Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
@@ -70,7 +70,7 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (req: express.Request, res: express.Response) => {
   res.status(404).json({ error: 'Route not found' });
 });
 

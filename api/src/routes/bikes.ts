@@ -7,7 +7,7 @@ const router = express.Router()
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } })
 
 // Create bike (admin)
-router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { model, frame_no, plate_no, availability_status } = req.body as {
       model?: string
@@ -36,7 +36,7 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) 
 })
 
 // List bikes (admin)
-router.get('/', authenticateToken, requireAdmin, async (_req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireAdmin, async (_req: AuthRequest, res: express.Response) => {
   try {
     const { data, error } = await supabase
       .from('bikes')
@@ -54,7 +54,7 @@ router.get('/', authenticateToken, requireAdmin, async (_req: AuthRequest, res) 
 })
 
 // Update bike (admin)
-router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const updates = req.body as {
@@ -77,7 +77,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 })
 
 // List available bikes (admin)
-router.get('/available', authenticateToken, requireAdmin, async (_req: AuthRequest, res) => {
+router.get('/available', authenticateToken, requireAdmin, async (_req: AuthRequest, res: express.Response) => {
   try {
     const { data, error } = await supabase
       .from('bikes')
@@ -96,7 +96,7 @@ router.get('/available', authenticateToken, requireAdmin, async (_req: AuthReque
 })
 
 // Archive (soft-delete) bike (admin)
-router.post('/:id/archive', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/:id/archive', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const { data, error } = await supabase
@@ -113,7 +113,7 @@ router.post('/:id/archive', authenticateToken, requireAdmin, async (req: AuthReq
 })
 
 // Delete bike (admin) with guard
-router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const { data: refs } = await supabase
@@ -136,7 +136,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
 })
 
 // Bike metadata (color/specs) stored in storage as JSON
-router.get('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const filePath = `bike-meta/${id}.json`
@@ -151,7 +151,7 @@ router.get('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest
   }
 })
 
-router.put('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.put('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const meta = req.body as { color?: string; specs?: string }
@@ -169,7 +169,7 @@ router.put('/:id/meta', authenticateToken, requireAdmin, async (req: AuthRequest
 })
 
 // Bike documentation uploads
-router.post('/:id/docs', authenticateToken, requireAdmin, upload.array('files', 5), async (req: AuthRequest, res) => {
+router.post('/:id/docs', authenticateToken, requireAdmin, upload.array('files', 5), async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const files = (req as unknown as { files?: Express.Multer.File[] }).files || []
@@ -190,7 +190,7 @@ router.post('/:id/docs', authenticateToken, requireAdmin, upload.array('files', 
   }
 })
 
-router.get('/:id/docs', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/:id/docs', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const prefix = `bike-docs/${id}`

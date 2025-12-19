@@ -7,7 +7,7 @@ const router = express.Router();
 const pdfService = new PDFService();
 
 // Generate PDF for agreement
-router.post('/generate/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.post('/generate/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { agreementId } = req.params;
 
@@ -96,7 +96,7 @@ router.post('/generate/:agreementId', authenticateToken, requireAdmin, async (re
 });
 
 // Download existing PDF
-router.get('/download/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/download/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { agreementId } = req.params;
 
@@ -160,7 +160,7 @@ router.get('/download/:agreementId', authenticateToken, requireAdmin, async (req
 });
 
 // Get PDF URL (for preview)
-router.get('/url/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/url/:agreementId', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { agreementId } = req.params;
 

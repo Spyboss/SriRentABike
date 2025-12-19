@@ -7,7 +7,7 @@ import { CreateAgreementRequest, UpdateAgreementRequest } from '../models/types'
 const router = express.Router();
 
 // Create new agreement (guest)
-router.post('/', async (req, res) => {
+router.post('/', async (req: express.Request, res: express.Response) => {
   try {
     const { tourist_data, signature }: CreateAgreementRequest = req.body;
 
@@ -113,7 +113,7 @@ router.post('/', async (req, res) => {
 });
 
 // Public agreement status by reference
-router.get('/public/:reference', async (req, res) => {
+router.get('/public/:reference', async (req: express.Request, res: express.Response) => {
   try {
     const { reference } = req.params;
     const { data: agreement, error } = await supabase
@@ -153,7 +153,7 @@ router.get('/public/:reference', async (req, res) => {
 });
 
 // Get all agreements (admin)
-router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { page = 1, limit = 20, search, status, start_date, end_date } = req.query;
     
@@ -221,7 +221,7 @@ router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res) =
 });
 
 // Get single agreement (admin)
-router.get('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -253,7 +253,7 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 });
 
 // Update agreement (admin)
-router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
     const updates: UpdateAgreementRequest = req.body;
@@ -329,7 +329,7 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 });
 
 // Soft delete agreement (admin)
-router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
     const { data: agreement, error } = await supabase
@@ -379,7 +379,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
   }
 });
 // Agreement audit events (admin)
-router.get('/:id/audit', authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+router.get('/:id/audit', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
     const { data, error } = await supabase
