@@ -17,6 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { pdfAPI, agreementsAPI } from '../services/api';
+import { Logo } from '../components/Logo';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -128,8 +129,9 @@ export const Dashboard: React.FC = () => {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">SriRentABike Admin</h1>
+            <div className="flex items-center space-x-4">
+              <Logo width={150} />
+              <h1 className="text-2xl font-bold text-gray-900 border-l pl-4 border-gray-300">Admin Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-500">Welcome, {user.email}</span>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bike, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -17,9 +18,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-xl w-full bg-white rounded-lg shadow-md p-8">
         <div className="flex items-center justify-center mb-6">
-          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-            <Bike className="h-6 w-6 text-blue-600" />
-          </div>
+           <Logo width={180} />
         </div>
         <h1 className="text-2xl font-bold text-center text-gray-900">SriRentABike</h1>
         <p className="text-center text-gray-600 mt-2">Digital rental agreements made easy</p>

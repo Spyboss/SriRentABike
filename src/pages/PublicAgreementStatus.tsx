@@ -75,6 +75,9 @@ export default function PublicAgreementStatus() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-center mb-6">
+             <Logo width={120} />
+          </div>
           <div className="flex items-center mb-4">
             <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
             <h1 className="text-xl font-bold text-gray-900">Agreement Status</h1>

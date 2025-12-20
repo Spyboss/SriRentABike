@@ -286,6 +286,7 @@ export const AgreementDetail: React.FC = () => {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
+              <Logo width={120} className="mr-4" />
               <h1 className="text-2xl font-bold text-gray-900">Agreement Details</h1>
             </div>
             <div className="flex items-center space-x-4"></div>

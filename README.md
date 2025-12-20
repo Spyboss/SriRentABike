@@ -13,6 +13,19 @@ A modern, mobile-first digital rental agreement system that replaces paper workf
 - **Secure Authentication**: JWT-based authentication for admin users
 - **Real-time Updates**: Live agreement status updates
 
+## Branding Configuration
+
+The application uses a centralized branding configuration.
+
+- **Frontend Config**: `src/config/branding.ts`
+- **Backend Config**: `api/src/config/branding.ts`
+
+You can update the `logo.url`, `companyName`, and other branding assets in these files. The logo is automatically used across:
+- Header components
+- Authentication screens
+- PDF exports
+- Public forms
+
 ## Tech Stack
 
 ### Frontend

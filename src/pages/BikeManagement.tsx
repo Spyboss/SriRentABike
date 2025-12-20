@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useBikesStore } from '@/stores/bikes';
 import { bikeMetaAPI } from '@/services/api';
 import { Plus, Edit3, Archive, RefreshCw, CheckCircle, AlertCircle, Search, Filter } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function BikeManagement() {
   const navigate = useNavigate();
@@ -95,7 +96,10 @@ export default function BikeManagement() {
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <h1 className="text-2xl font-bold text-gray-900">Bike Management</h1>
+            <div className="flex items-center space-x-4">
+              <Logo width={120} />
+              <h1 className="text-2xl font-bold text-gray-900 border-l pl-4 border-gray-300">Bike Management</h1>
+            </div>
             <div className="flex items-center space-x-2">
               <button onClick={startCreate} className="inline-flex items-center px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />

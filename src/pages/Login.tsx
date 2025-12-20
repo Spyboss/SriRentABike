@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -25,10 +26,8 @@ export const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <Lock className="h-6 w-6 text-blue-600" />
-          </div>
+        <div className="flex flex-col items-center">
+          <Logo width={200} className="mb-4" />
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Admin Login
           </h2>

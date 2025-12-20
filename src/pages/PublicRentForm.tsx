@@ -4,6 +4,7 @@ import { agreementsAPI } from '@/services/api';
 import { SignaturePad } from '@/components/SignaturePad';
 import { CheckCircle, AlertCircle, Loader2, Lock } from 'lucide-react';
 import { rateAPI } from '@/services/api';
+import { Logo } from '@/components/Logo';
 
 export default function PublicRentForm() {
   const navigate = useNavigate();
@@ -128,6 +129,9 @@ export default function PublicRentForm() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-white p-6 border-b border-gray-100 flex justify-center">
+            <Logo width={150} />
+          </div>
           <div className="bg-blue-600 text-white p-6">
             <h1 className="text-2xl font-bold">SriRentABike Rental Agreement</h1>
             <p className="text-blue-100 mt-1">Fill out all required fields</p>
