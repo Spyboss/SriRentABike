@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { agreementsAPI } from '@/services/api';
 import { AlertCircle, CheckCircle, FileDown, Loader2 } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 export default function PublicAgreementStatus() {
   const { reference } = useParams<{ reference: string }>();

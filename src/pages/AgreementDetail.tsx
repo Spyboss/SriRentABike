@@ -19,6 +19,7 @@ import {
   X
 } from 'lucide-react';
 import { useBikesStore } from '@/stores/bikes';
+import { Logo } from '../components/Logo';
 
 interface Agreement {
   id: string;
