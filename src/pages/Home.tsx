@@ -37,17 +37,18 @@ export default function Home() {
               <Logo width={80} />
               <span className="hidden md:block text-xl font-bold text-stone-900 tracking-tight">SriRentABike</span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <button
                 onClick={handleAdminLogin}
-                className="inline-flex items-center px-4 py-2 border border-stone-200 text-sm font-medium rounded-full text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors duration-200"
+                className="inline-flex items-center px-3 py-2 border border-stone-200 text-sm font-medium rounded-full text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors duration-200"
+                aria-label="Admin Login"
               >
-                <Lock className="w-4 h-4 mr-2" />
-                Admin
+                <Lock className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Admin</span>
               </button>
               <button
                 onClick={handlePublicForm}
-                className="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-full text-white bg-stone-900 hover:bg-stone-800 transition-colors duration-200 shadow-md"
+                className="inline-flex items-center px-4 py-2.5 sm:px-5 sm:py-2.5 text-sm font-medium rounded-full text-white bg-stone-900 hover:bg-stone-800 transition-colors duration-200 shadow-md"
               >
                 Rent Now
               </button>
