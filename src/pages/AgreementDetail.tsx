@@ -483,7 +483,7 @@ export const AgreementDetail: React.FC = () => {
                   <select
                     value={bikeId}
                     onChange={(e) => setBikeId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a bike</option>
                     {available.map((b) => (
@@ -503,14 +503,14 @@ export const AgreementDetail: React.FC = () => {
                     }}
                     placeholder="5000"
                     disabled={!user || user.role !== 'admin'}
-                    className={`w-full px-3 py-2 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
+                    className={`w-full px-3 py-3 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
                     title="Only administrators can modify this rate"
                   />
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex space-x-3">
                   <button
                     onClick={handleUpdateBike}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <Save className="w-4 h-4 mr-1" />
                     Save
@@ -520,7 +520,7 @@ export const AgreementDetail: React.FC = () => {
                       setIsEditing(false);
                       setBikeId(agreement.bike_id || '');
                     }}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="inline-flex items-center px-4 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     <X className="w-4 h-4 mr-1" />
                     Cancel

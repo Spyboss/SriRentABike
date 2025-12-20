@@ -293,16 +293,16 @@ export const Dashboard: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tourist
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                     Contact
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                     Bike
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                     Created
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -339,25 +339,28 @@ export const Dashboard: React.FC = () => {
                             <div className="text-sm font-medium text-gray-900">
                               {agreement.tourist_data?.first_name} {agreement.tourist_data?.last_name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 sm:hidden">
+                              {agreement.tourist_data?.passport_no}
+                            </div>
+                            <div className="text-sm text-gray-500 hidden sm:block">
                               {agreement.tourist_data?.nationality}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                         <div className="text-sm text-gray-900">{agreement.tourist_data?.email}</div>
                         <div className="text-sm text-gray-500">{agreement.tourist_data?.phone_number}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(agreement.status)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                         <div className="text-sm text-gray-900">
                           {agreement.bike_id ? `Bike #${agreement.bike_id}` : 'Not assigned'}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                         <div className="text-sm text-gray-900">
                           {new Date(agreement.created_at).toLocaleDateString()}
                         </div>
@@ -369,24 +372,27 @@ export const Dashboard: React.FC = () => {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleViewAgreement(agreement.id)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-full transition-colors"
+                            aria-label="View Agreement"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-5 h-5" />
                           </button>
                           {agreement.pdf_url && (
                             <button
                               onClick={() => handleDownloadPDF(agreement.id)}
-                              className="text-green-600 hover:text-green-900"
+                              className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-full transition-colors"
+                              aria-label="Download PDF"
                             >
-                              <Download className="w-4 h-4" />
+                              <Download className="w-5 h-5" />
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteAgreement(agreement.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-full transition-colors"
                             title="Delete agreement"
+                            aria-label="Delete Agreement"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </td>
