@@ -194,7 +194,7 @@ npm run build
 - `bikes` - Bike inventory
 - `audit_events` - Action audit log
 
-See `.trae/documents/technical_architecture_srirentabike_mvp.md` for complete schema.
+See technical architecture documentation for complete schema.
 
 ## Security Features
 
