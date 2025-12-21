@@ -142,11 +142,11 @@ export default function PublicRentForm() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (LKR)</label>
@@ -155,10 +155,10 @@ export default function PublicRentForm() {
                       type="text"
                       value={`${dailyRate} LKR`}
                       readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
+                      className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
                       title="Only administrators can modify this rate"
                     />
-                    <Lock className="w-4 h-4 text-gray-500 absolute right-3 top-2.5" />
+                    <Lock className="w-4 h-4 text-gray-500 absolute right-3 top-3.5" />
                   </div>
                   {rateError && <p className="text-xs text-red-600 mt-1">{rateError}</p>}
                 </div>
@@ -166,7 +166,7 @@ export default function PublicRentForm() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Deposit *</label>
-                  <input type="number" min={0} value={deposit} onChange={(e) => setDeposit(Number(e.target.value))} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input type="number" min={0} value={deposit} onChange={(e) => setDeposit(Number(e.target.value))} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
                 </div>
                 <div className="md:col-span-2">
                   <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
@@ -186,19 +186,19 @@ export default function PublicRentForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                  <input id="first_name" name="first_name" value={touristData.first_name} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input id="first_name" name="first_name" value={touristData.first_name} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                  <input id="last_name" name="last_name" value={touristData.last_name} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input id="last_name" name="last_name" value={touristData.last_name} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 mb-1">Nationality *</label>
-                  <input id="nationality" name="nationality" value={touristData.nationality} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input id="nationality" name="nationality" value={touristData.nationality} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="passport_no" className="block text-sm font-medium text-gray-700 mb-1">Passport Number *</label>
-                  <input id="passport_no" name="passport_no" value={touristData.passport_no} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input id="passport_no" name="passport_no" value={touristData.passport_no} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
             </div>
@@ -207,19 +207,19 @@ export default function PublicRentForm() {
               <div className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                  <input type="email" id="email" name="email" value={touristData.email} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="email" id="email" name="email" value={touristData.email} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                  <input type="tel" id="phone_number" name="phone_number" value={touristData.phone_number} onChange={handleInputChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="tel" id="phone_number" name="phone_number" value={touristData.phone_number} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="home_address" className="block text-sm font-medium text-gray-700 mb-1">Home Address *</label>
-                  <textarea id="home_address" name="home_address" value={touristData.home_address} onChange={handleInputChange} required rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <textarea id="home_address" name="home_address" value={touristData.home_address} onChange={handleInputChange} required rows={3} className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label htmlFor="hotel_name" className="block text-sm font-medium text-gray-700 mb-1">Hotel Name (Optional)</label>
-                  <input id="hotel_name" name="hotel_name" value={touristData.hotel_name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input id="hotel_name" name="hotel_name" value={touristData.hotel_name} onChange={handleInputChange} className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
             </div>
