@@ -11,7 +11,27 @@ A modern, mobile-first digital rental agreement system that replaces paper workf
 - **PDF Generation**: Professional PDF generation with company branding
 - **Mobile First**: Optimized for mobile devices and tablets
 - **Secure Authentication**: JWT-based authentication for admin users
-- **Real-time Updates**: Live agreement status updates
+- Real-time Updates: Live agreement status updates
+
+## Mobile Optimization Strategy
+
+The application follows a strict mobile-first design philosophy to ensure seamless operation on all devices, particularly for on-the-go rental management.
+
+### Design Decisions
+- **Fluid Layouts**: Uses relative units (%, rem, vh/vw) instead of fixed pixels to adapt to any screen width.
+- **Touch Targets**: All interactive elements (buttons, inputs, links) have a minimum touch target size of 48x48px to accommodate finger taps.
+- **Responsive Tables**: Admin data tables use a priority-based column visibility pattern. Less critical columns (passport no, email, etc.) are hidden on smaller screens (`hidden sm:table-cell`), ensuring the layout never breaks horizontally.
+- **Typography**: Font sizes are optimized for readability on small screens without zooming.
+- **Navigation**: Simplified navigation bars and menus for mobile contexts.
+- **Performance**: 
+  - Images use `loading="lazy"` for better initial load times.
+  - Critical rendering path optimized via Tailwind CSS.
+  - Assets are minified during the build process.
+
+### Supported Breakpoints
+- **Mobile**: < 640px (Default/Base styles)
+- **Tablet**: 640px - 1024px (`sm:`, `md:` prefixes)
+- **Desktop**: > 1024px (`lg:`, `xl:` prefixes)
 
 ## Branding Configuration
 

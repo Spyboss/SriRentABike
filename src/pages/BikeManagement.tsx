@@ -209,19 +209,19 @@ export default function BikeManagement() {
             <form onSubmit={submitForm} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
-                <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Frame No *</label>
-                <input value={form.frame_no} onChange={(e) => setForm({ ...form, frame_no: e.target.value })} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input value={form.frame_no} onChange={(e) => setForm({ ...form, frame_no: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Plate No *</label>
-                <input value={form.plate_no} onChange={(e) => setForm({ ...form, plate_no: e.target.value })} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input value={form.plate_no} onChange={(e) => setForm({ ...form, plate_no: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select value={form.availability_status} onChange={(e) => setForm({ ...form, availability_status: e.target.value as 'available' | 'rented' | 'maintenance' })} className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <select value={form.availability_status} onChange={(e) => setForm({ ...form, availability_status: e.target.value as 'available' | 'rented' | 'maintenance' })} className="w-full px-3 py-3 border border-gray-300 rounded-md">
                   <option value="available">available</option>
                   <option value="rented">rented</option>
                   <option value="maintenance">maintenance</option>
@@ -230,25 +230,25 @@ export default function BikeManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                  <input type="color" value={color || '#ffffff'} onChange={(e) => setColor(e.target.value)} className="w-16 h-10 p-0 border border-gray-300 rounded-md" />
+                  <input type="color" value={color || '#ffffff'} onChange={(e) => setColor(e.target.value)} className="w-16 h-12 p-0 border border-gray-300 rounded-md" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Specifications</label>
-                  <input value={specs} onChange={(e) => setSpecs(e.target.value)} placeholder="e.g., helmet size, tank capacity" className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                  <input value={specs} onChange={(e) => setSpecs(e.target.value)} placeholder="e.g., helmet size, tank capacity" className="w-full px-3 py-3 border border-gray-300 rounded-md" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Documentation Uploads</label>
-                <input type="file" multiple onChange={(e) => setDocs(e.target.files)} className="w-full text-sm" />
+                <input type="file" multiple onChange={(e) => setDocs(e.target.files)} className="w-full text-sm py-2" />
                 {docUrls.length > 0 && (
                   <ul className="mt-2 text-sm text-gray-600">
                     {docUrls.map((u) => <li key={u}><a href={u} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{u}</a></li>)}
                   </ul>
                 )}
               </div>
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">{editingId ? 'Save' : 'Create'}</button>
+              <div className="flex justify-end space-x-3">
+                <button type="button" onClick={() => setShowForm(false)} className="px-5 py-3 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+                <button type="submit" className="px-5 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700">{editingId ? 'Save' : 'Create'}</button>
               </div>
             </form>
             {error && (
