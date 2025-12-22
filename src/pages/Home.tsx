@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, MapPin, Bike, Users, ArrowRight, Heart, Phone, Mail, Clock, Car } from 'lucide-react';
+import { Lock, MapPin, ArrowRight, Phone, Mail, Clock, Car } from 'lucide-react';
 import { Logo } from '../components/Logo';
 
 export default function Home() {

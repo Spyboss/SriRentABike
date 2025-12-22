@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { agreementsAPI, pdfAPI } from '../services/api';
@@ -57,17 +57,7 @@ export const AgreementDetail: React.FC = () => {
   const [endDate, setEndDate] = useState<string>('');
   const [deposit, setDeposit] = useState<number | ''>('');
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-
-    fetchAgreement();
-    fetchAvailable();
-  }, [id, user, navigate, fetchAvailable]);
-
-  const fetchAgreement = async () => {
+  const fetchAgreement = useCallback(async () => {
     if (!id) return;
     
     try {
@@ -146,7 +136,17 @@ export const AgreementDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    fetchAgreement();
+    fetchAvailable();
+  }, [fetchAgreement, user, navigate, fetchAvailable]);
 
   const handleUpdateBike = async () => {
     if (!id || !agreement) return;

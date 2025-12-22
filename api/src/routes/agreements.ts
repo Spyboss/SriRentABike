@@ -332,9 +332,10 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
+    const now = new Date().toISOString();
     const { data: agreement, error } = await supabase
       .from('agreements')
-      .update({ deleted_at: new Date().toISOString(), status: 'expired', updated_at: new Date().toISOString() })
+      .update({ deleted_at: now, updated_at: now })
       .eq('id', id)
       .select()
       .single();
@@ -343,35 +344,46 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
       if (code === 'PGRST116') {
         return res.status(404).json({ error: 'Agreement not found' });
       }
-      if (code === 'PGRST204') {
-        // Fallback if deleted_at column not yet migrated: mark expired only
-        const { data: agreement2, error: err2 } = await supabase
+      const message = (error as { message?: string })?.message || '';
+      const missingDeletedAt =
+        code === '42703' ||
+        /deleted_at/i.test(message) && /(column|schema cache)/i.test(message);
+      if (missingDeletedAt) {
+        const { data: hardDeleted, error: hardDeleteError } = await supabase
           .from('agreements')
-          .update({ status: 'expired', updated_at: new Date().toISOString() })
+          .delete()
           .eq('id', id)
           .select()
           .single();
-        if (err2) throw err2;
-        await supabase
-          .from('audit_events')
-          .insert([{
-            actor: req.user!.email,
-            action: 'delete_agreement',
-            agreement_id: id,
-            timestamp: new Date().toISOString()
-          }]);
-        return res.json({ agreement: agreement2 });
+        if (hardDeleteError) throw hardDeleteError;
+        try {
+          await supabase
+            .from('audit_events')
+            .insert([{
+              actor: req.user!.email,
+              action: 'delete_agreement',
+              agreement_id: id,
+              timestamp: now
+            }]);
+        } catch (auditError) {
+          console.error('Delete agreement audit error:', auditError);
+        }
+        return res.json({ agreement: hardDeleted });
       }
       throw error;
     }
-    await supabase
-      .from('audit_events')
-      .insert([{
-        actor: req.user!.email,
-        action: 'delete_agreement',
-        agreement_id: id,
-        timestamp: new Date().toISOString()
-      }]);
+    try {
+      await supabase
+        .from('audit_events')
+        .insert([{
+          actor: req.user!.email,
+          action: 'delete_agreement',
+          agreement_id: id,
+          timestamp: now
+        }]);
+    } catch (auditError) {
+      console.error('Delete agreement audit error:', auditError);
+    }
     res.json({ agreement });
   } catch (error) {
     console.error('Delete agreement error:', error);

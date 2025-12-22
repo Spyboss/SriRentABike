@@ -3,14 +3,12 @@ import { BRANDING } from '../config/branding';
 
 interface LogoProps {
   className?: string;
-  variant?: 'default' | 'white';
   width?: number | string;
   height?: number | string;
 }
 
 export const Logo: React.FC<LogoProps> = ({ 
   className = '', 
-  variant = 'default',
   width,
   height
 }) => {
