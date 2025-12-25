@@ -75,20 +75,21 @@ export class PDFService {
         }
         
         .logo {
-          width: 40px;
-          height: 40px;
+          width: 60px;
+          height: 60px;
           background: #fbbf24;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-right: 15px;
+          overflow: hidden;
         }
         
-        .logo svg {
-          width: 20px;
-          height: 20px;
-          fill: #000;
+        .logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
         
         .company-name {
