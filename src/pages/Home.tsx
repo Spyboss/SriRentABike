@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Lock, MapPin, ArrowRight, Phone, Mail, Clock, Car } from 'lucide-react';
 import { Logo } from '../components/Logo';
@@ -29,6 +30,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans">
+      <Helmet>
+        <title>SriRentABike - Bike Rentals in Tangalle, Sri Lanka</title>
+        <meta name="description" content="Authentic Bike Rentals in Tangalle. Explore the South Coast of Sri Lanka on your own terms with our reliable scooters and motorbikes. 24/7 support and friendly service." />
+        <link rel="canonical" href="https://www.srirentabike.com/" />
+      </Helmet>
+
       {/* Navigation */}
       <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 border-b border-stone-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
