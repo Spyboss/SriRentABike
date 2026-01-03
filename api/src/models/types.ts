@@ -44,6 +44,8 @@ export interface Agreement {
   signature_url?: string;
   signed_at?: string;
   created_at: string;
+  requested_model?: string;
+  outside_area?: boolean;
 }
 
 export interface GuestLink {
@@ -79,6 +81,13 @@ export interface CreateAgreementRequest {
     hotel_name?: string;
   };
   signature: string; // Base64 encoded image
+  start_date: string;
+  end_date: string;
+  daily_rate: number;
+  total_amount: number;
+  deposit: number;
+  requested_model?: string;
+  outside_area?: boolean;
 }
 
 export interface UpdateAgreementRequest {

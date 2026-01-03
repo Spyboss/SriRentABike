@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { agreementsAPI } from '@/services/api';
 import { SignaturePad } from '@/components/SignaturePad';
-import { CheckCircle, AlertCircle, Loader2, Lock } from 'lucide-react';
-import { rateAPI } from '@/services/api';
+import { CheckCircle, AlertCircle, Loader2, Lock, DollarSign, RefreshCw } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { BIKE_MODELS, PRICING_RULES, BikeModel } from '@/config/bike-rates';
 
 export default function PublicRentForm() {
   const navigate = useNavigate();
@@ -20,23 +20,95 @@ export default function PublicRentForm() {
   });
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [dailyRate, setDailyRate] = useState<number>(0);
+  const [selectedModelId, setSelectedModelId] = useState<string>(BIKE_MODELS[0].id);
+  const [outsideArea, setOutsideArea] = useState<boolean>(false);
+  const [currency, setCurrency] = useState<'LKR' | 'USD'>('LKR');
+  const [exchangeRate, setExchangeRate] = useState<number>(300); // Default fallback
+  const [loadingRate, setLoadingRate] = useState<boolean>(false);
+  
   const [deposit, setDeposit] = useState<number>(0);
   const [signature, setSignature] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successRef, setSuccessRef] = useState<string | null>(null);
-  const [rateError, setRateError] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    rateAPI.get().then(r => {
-      const dr = Number(r.data?.daily_rate ?? 5000);
-      setDailyRate(dr);
-    }).catch(() => {
-      setDailyRate(5000);
-      setRateError('Failed to load daily rate');
-    });
+  useEffect(() => {
+    fetchExchangeRate();
   }, []);
+
+  const fetchExchangeRate = async () => {
+    setLoadingRate(true);
+    try {
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await res.json();
+      if (data && data.rates && data.rates.LKR) {
+        setExchangeRate(data.rates.LKR);
+      }
+    } catch (e) {
+      console.error('Failed to fetch exchange rate', e);
+    } finally {
+      setLoadingRate(false);
+    }
+  };
+
+  const selectedModel = useMemo(() => 
+    BIKE_MODELS.find(m => m.id === selectedModelId) || BIKE_MODELS[0], 
+    [selectedModelId]
+  );
+
+  const pricing = useMemo(() => {
+    if (!startDate || !endDate) return { 
+      totalLKR: 0, 
+      days: 0, 
+      dailyRateLKR: 0, 
+      baseDailyRateLKR: selectedModel.dailyRateLKR 
+    };
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const effectiveDays = Math.max(1, days);
+
+    let totalLKR = 0;
+    let appliedRate = selectedModel.dailyRateLKR;
+
+    // Monthly Rate Logic
+    if (effectiveDays >= 30) {
+      // Pro-rate monthly rate
+      appliedRate = selectedModel.monthlyRateLKR / 30;
+      totalLKR = appliedRate * effectiveDays;
+    } else {
+      // Daily Rate Logic
+      totalLKR = effectiveDays * selectedModel.dailyRateLKR;
+      
+      // Long term discount (> 3 days)
+      if (effectiveDays > PRICING_RULES.longTermDiscountDays) {
+        const discountAmount = totalLKR * PRICING_RULES.longTermDiscountPercentage;
+        totalLKR -= discountAmount;
+      }
+    }
+
+    // Outside Area Surcharge
+    if (outsideArea) {
+      totalLKR += effectiveDays * PRICING_RULES.outsideAreaRateLKR;
+    }
+
+    return {
+      totalLKR,
+      days: effectiveDays,
+      dailyRateLKR: appliedRate,
+      baseDailyRateLKR: selectedModel.dailyRateLKR
+    };
+  }, [startDate, endDate, selectedModel, outsideArea]);
+
+  const displayAmount = (amountLKR: number | undefined) => {
+    if (amountLKR === undefined || amountLKR === null) return currency === 'USD' ? '$0.00' : 'LKR 0.00';
+    if (currency === 'USD') {
+      return `$${(amountLKR / exchangeRate).toFixed(2)}`;
+    }
+    return `LKR ${amountLKR.toFixed(2)}`;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -79,8 +151,11 @@ export default function PublicRentForm() {
         signature,
         start_date: startDate,
         end_date: endDate,
-        daily_rate: dailyRate,
-        deposit
+        daily_rate: pricing.baseDailyRateLKR, // Storing base rate
+        total_amount: pricing.totalLKR,
+        deposit,
+        requested_model: selectedModel.name,
+        outside_area: outsideArea
       });
       const ref = response.data?.agreement_no as string | undefined;
       setSuccessRef(ref || null);
@@ -127,61 +202,117 @@ export default function PublicRentForm() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-white p-6 border-b border-gray-100 flex justify-center">
+          <div className="bg-white p-6 border-b border-gray-100 flex justify-center relative">
             <Logo width={150} />
+            <div className="absolute right-6 top-6 flex items-center gap-2">
+               <button 
+                 type="button"
+                 onClick={() => setCurrency(c => c === 'LKR' ? 'USD' : 'LKR')}
+                 className="flex items-center gap-1 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium transition-colors"
+               >
+                 <RefreshCw className={`w-3 h-3 ${loadingRate ? 'animate-spin' : ''}`} />
+                 {currency}
+               </button>
+            </div>
           </div>
           <div className="bg-blue-600 text-white p-6">
             <h1 className="text-2xl font-bold">SriRentABike Rental Agreement</h1>
             <p className="text-blue-100 mt-1">Fill out all required fields</p>
           </div>
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Rental Period & Pricing</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+            {/* Bike Selection & Pricing */}
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Lock className="w-5 h-5 text-blue-600" />
+                Vehicle Selection & Pricing
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Select Bike Model</label>
+                  <select 
+                    value={selectedModelId}
+                    onChange={(e) => setSelectedModelId(e.target.value)}
+                    className="w-full px-3 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {BIKE_MODELS.map(model => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} - {model.dailyRateLKR} LKR/day
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Monthly rate: {selectedModel.monthlyRateLKR} LKR
+                  </p>
+                </div>
+
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={outsideArea} 
+                      onChange={(e) => setOutsideArea(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700 font-medium">Outside Area Travel (+{PRICING_RULES.outsideAreaRateLKR} LKR/day)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (LKR)</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={`${dailyRate} LKR`}
-                      readOnly
-                      className="w-full px-3 py-3 border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
-                      title="Only administrators can modify this rate"
-                    />
-                    <Lock className="w-4 h-4 text-gray-500 absolute right-3 top-3.5" />
-                  </div>
-                  {rateError && <p className="text-xs text-red-600 mt-1">{rateError}</p>}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Deposit</label>
+                  <input type="number" min={0} value={deposit} onChange={(e) => setDeposit(Number(e.target.value))} required className="w-full px-3 py-2 border border-gray-300 rounded-md" />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Deposit *</label>
-                  <input type="number" min={0} value={deposit} onChange={(e) => setDeposit(Number(e.target.value))} required className="w-full px-3 py-3 border border-gray-300 rounded-md" />
+
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Duration:</span>
+                  <span className="font-medium">{pricing.days} days</span>
                 </div>
-                <div className="md:col-span-2">
-                  <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
-                    <p className="text-sm text-gray-700">
-                      Total Amount: <span className="font-semibold">
-                        {startDate && endDate && dailyRate
-                          ? `$${(Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000*60*60*24))) * dailyRate).toFixed(2)}`
-                          : '$0.00'}
-                      </span>
-                    </p>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-600">Rate per day:</span>
+                  <span className="font-medium">{displayAmount(pricing.dailyRateLKR)}</span>
+                </div>
+                 {pricing.days > PRICING_RULES.longTermDiscountDays && (
+                  <div className="flex justify-between items-center mb-2 text-green-600 text-sm">
+                    <span>Long-term discount applied</span>
+                    <span>-{Math.round(PRICING_RULES.longTermDiscountPercentage * 100)}%</span>
                   </div>
+                )}
+                {outsideArea && (
+                  <div className="flex justify-between items-center mb-2 text-orange-600 text-sm">
+                    <span>Outside Area Surcharge</span>
+                    <span>+{displayAmount(pricing.days * PRICING_RULES.outsideAreaRateLKR)}</span>
+                  </div>
+                )}
+                <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between items-center">
+                  <span className="text-lg font-bold text-blue-900">Total Estimate:</span>
+                  <span className="text-2xl font-bold text-blue-700">{displayAmount(pricing.totalLKR)}</span>
                 </div>
+                {currency === 'USD' && (
+                  <p className="text-xs text-right text-gray-500 mt-1">
+                    * Exchange rate: 1 USD = {exchangeRate.toFixed(2)} LKR
+                  </p>
+                )}
               </div>
-            </div>
-            <div>
+            </section>
+
+            <hr className="border-gray-200" />
+
+            {/* Personal Information */}
+            <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -201,8 +332,10 @@ export default function PublicRentForm() {
                   <input id="passport_no" name="passport_no" value={touristData.passport_no} onChange={handleInputChange} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
-            </div>
-            <div>
+            </section>
+
+            {/* Contact Information */}
+            <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
               <div className="space-y-4">
                 <div>
@@ -222,10 +355,13 @@ export default function PublicRentForm() {
                   <input id="hotel_name" name="hotel_name" value={touristData.hotel_name} onChange={handleInputChange} className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
-            </div>
-            <div>
+            </section>
+
+            <section>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Signature *</label>
               <SignaturePad onSave={setSignature} onClear={() => setSignature(null)} signature={signature} />
-            </div>
+            </section>
+
             {submitError && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <div className="flex">

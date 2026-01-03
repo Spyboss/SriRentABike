@@ -9,7 +9,17 @@ const router = express.Router();
 // Create new agreement (guest)
 router.post('/', async (req: express.Request, res: express.Response) => {
   try {
-    const { tourist_data, signature }: CreateAgreementRequest = req.body;
+    const { 
+      tourist_data, 
+      signature, 
+      start_date, 
+      end_date, 
+      daily_rate, 
+      total_amount, 
+      deposit, 
+      requested_model, 
+      outside_area 
+    }: CreateAgreementRequest = req.body;
 
     // Validate required fields
     if (!tourist_data || !signature) {
@@ -63,12 +73,13 @@ router.post('/', async (req: express.Request, res: express.Response) => {
         status: 'pending',
         signature_url: signatureUrl,
         signed_at: new Date().toISOString(),
-        // Default values that admin will update
-        start_date: new Date().toISOString().split('T')[0],
-        end_date: new Date().toISOString().split('T')[0],
-        daily_rate: 0,
-        total_amount: 0,
-        deposit: 0
+        start_date: start_date || new Date().toISOString().split('T')[0],
+        end_date: end_date || new Date().toISOString().split('T')[0],
+        daily_rate: daily_rate || 0,
+        total_amount: total_amount || 0,
+        deposit: deposit || 0,
+        requested_model: requested_model || null,
+        outside_area: outside_area || false
       }])
       .select()
       .single();
