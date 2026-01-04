@@ -19,6 +19,8 @@ import {
 import { pdfAPI, agreementsAPI } from '../services/api';
 import { Logo } from '../components/Logo';
 
+import { Navbar } from '../components/Navbar';
+
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
@@ -91,28 +93,28 @@ export const Dashboard: React.FC = () => {
     switch (status) {
       case 'completed':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Completed
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
             Pending
           </span>
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Expired
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
             {status}
           </span>
         );
@@ -124,157 +126,136 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Logo width={150} />
-              <h1 className="text-2xl font-bold text-gray-900 border-l pl-4 border-gray-300">Admin Dashboard</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Welcome, {user.email}</span>
-              <button
-                onClick={() => navigate('/admin/bikes')}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              >
-                Bike Management
-              </button>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </button>
-            </div>
+    <div className="min-h-screen bg-stone-50">
+      <Navbar isAdmin userEmail={user.email} onLogout={handleLogout} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-32 pb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-stone-900">Admin Dashboard</h1>
+            <p className="text-stone-500 mt-1">Manage your rental agreements and bikes</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate('/admin/pricing')}
+              className="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2.5 border border-stone-200 shadow-sm text-sm font-medium rounded-xl text-stone-700 bg-white hover:bg-stone-50 transition-colors min-h-[48px]"
+            >
+              Pricing & Plans
+            </button>
+            <button
+              onClick={() => navigate('/admin/bikes')}
+              className="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2.5 border border-stone-200 shadow-sm text-sm font-medium rounded-xl text-stone-700 bg-white hover:bg-stone-50 transition-colors min-h-[48px]"
+            >
+              Bike Management
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <FileText className="h-6 w-6 text-gray-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Agreements</dt>
-                    <dd className="text-lg font-medium text-gray-900">{agreements.length}</dd>
-                  </dl>
-                </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 p-2 bg-stone-50 rounded-lg">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-stone-400" />
+              </div>
+              <div className="ml-3 md:ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Total</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">{agreements.length}</dd>
+                </dl>
               </div>
             </div>
           </div>
           
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <CheckCircle className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Completed</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {agreements.filter(a => a.status === 'completed').length}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 p-2 bg-green-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-green-500" />
+              </div>
+              <div className="ml-3 md:ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Completed</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">
+                    {agreements.filter(a => a.status === 'completed').length}
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
           
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Clock className="h-6 w-6 text-yellow-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Pending</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {agreements.filter(a => a.status === 'pending').length}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 p-2 bg-yellow-50 rounded-lg">
+                <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
+              </div>
+              <div className="ml-3 md:ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Pending</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">
+                    {agreements.filter(a => a.status === 'pending').length}
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
           
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <User className="h-6 w-6 text-blue-400" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Today's Agreements</dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {agreements.filter(a => {
-                        const today = new Date().toDateString();
-                        const agreementDate = new Date(a.created_at).toDateString();
-                        return agreementDate === today;
-                      }).length}
-                    </dd>
-                  </dl>
-                </div>
+          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 p-2 bg-blue-50 rounded-lg">
+                <User className="h-5 w-5 md:h-6 md:w-6 text-blue-500" />
+              </div>
+              <div className="ml-3 md:ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Today</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">
+                    {agreements.filter(a => {
+                      const today = new Date().toDateString();
+                      const agreementDate = new Date(a.created_at).toDateString();
+                      return agreementDate === today;
+                    }).length}
+                  </dd>
+                </dl>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white shadow rounded-lg mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Rental Agreements</h2>
-              <div className="mt-4 sm:mt-0 flex items-center space-x-4">
-                <button
-                  onClick={() => fetchAgreements()}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh
-                </button>
-              </div>
-            </div>
+        <div className="bg-white shadow-sm rounded-2xl border border-stone-100 mb-6 overflow-hidden">
+          <div className="px-6 py-4 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h2 className="text-lg font-bold text-stone-900">Rental Agreements</h2>
+            <button
+              onClick={() => fetchAgreements()}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl text-stone-600 bg-stone-50 hover:bg-stone-100 transition-colors min-h-[44px]"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </button>
           </div>
           
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search by name, email, or passport..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
+          <div className="px-6 py-4 flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-stone-400" />
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search name, email, passport..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="block w-full pl-10 pr-3 py-3 border border-stone-200 rounded-xl leading-5 bg-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm transition-all"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 md:w-48">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Filter className="h-4 w-4 text-stone-400" />
+                </div>
                 <select
                   value={statusFilter}
-                  onChange={(e) =>
-                    setStatusFilter(
-                      e.target.value as 'all' | 'pending' | 'completed' | 'expired'
-                    )
-                  }
-                  className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="block w-full pl-10 pr-10 py-3 text-base border-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm rounded-xl appearance-none bg-white transition-all"
                 >
                   <option value="all">All Status</option>
                   <option value="pending">Pending</option>
@@ -285,115 +266,51 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Agreements Table */}
+          {/* Agreements List (Mobile Card / Desktop Table) */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            {/* Desktop Table View */}
+            <table className="hidden md:table min-w-full divide-y divide-stone-100">
+              <thead className="bg-stone-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tourist
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Bike
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">Tourist</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">Bike</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-stone-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white divide-y divide-stone-100">
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      Loading agreements...
-                    </td>
-                  </tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-stone-400">Loading...</td></tr>
                 ) : filteredAgreements.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      {searchTerm || statusFilter !== 'all' 
-                        ? 'No agreements match your filters' 
-                        : 'No agreements found'}
-                    </td>
-                  </tr>
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-stone-400">No agreements found</td></tr>
                 ) : (
                   filteredAgreements.map((agreement) => (
-                    <tr key={agreement.id} className="hover:bg-gray-50">
+                    <tr key={agreement.id} className="hover:bg-stone-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <User className="h-5 w-5 text-blue-600" />
-                            </div>
+                          <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                            {agreement.tourist_data?.first_name?.[0]}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {agreement.tourist_data?.first_name} {agreement.tourist_data?.last_name}
-                            </div>
-                            <div className="text-sm text-gray-500 sm:hidden">
-                              {agreement.tourist_data?.passport_no}
-                            </div>
-                            <div className="text-sm text-gray-500 hidden sm:block">
-                              {agreement.tourist_data?.nationality}
-                            </div>
+                            <div className="text-sm font-bold text-stone-900">{agreement.tourist_data?.first_name} {agreement.tourist_data?.last_name}</div>
+                            <div className="text-xs text-stone-500">{agreement.tourist_data?.nationality}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
-                        <div className="text-sm text-gray-900">{agreement.tourist_data?.email}</div>
-                        <div className="text-sm text-gray-500">{agreement.tourist_data?.phone_number}</div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(agreement.status)}
+                        <div className="text-sm text-stone-900">{agreement.tourist_data?.email}</div>
+                        <div className="text-xs text-stone-500">{agreement.tourist_data?.phone_number}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                        <div className="text-sm text-gray-900">
-                          {agreement.bike_id ? `Bike #${agreement.bike_id}` : 'Not assigned'}
-                        </div>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(agreement.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600">
+                        {agreement.bike_id ? `Bike #${agreement.bike_id}` : 'Not assigned'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap hidden lg:table-cell">
-                        <div className="text-sm text-gray-900">
-                          {new Date(agreement.created_at).toLocaleDateString()}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(agreement.created_at).toLocaleTimeString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleViewAgreement(agreement.id)}
-                            className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-full transition-colors"
-                            aria-label="View Agreement"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                          {agreement.pdf_url && (
-                            <button
-                              onClick={() => handleDownloadPDF(agreement.id)}
-                              className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-full transition-colors"
-                              aria-label="Download PDF"
-                            >
-                              <Download className="w-5 h-5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDeleteAgreement(agreement.id)}
-                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-full transition-colors"
-                            title="Delete agreement"
-                            aria-label="Delete Agreement"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleViewAgreement(agreement.id)} className="p-2 text-stone-400 hover:text-stone-900 transition-colors" title="View"><Eye className="w-5 h-5" /></button>
+                          {agreement.pdf_url && <button onClick={() => handleDownloadPDF(agreement.id)} className="p-2 text-stone-400 hover:text-green-600 transition-colors" title="Download"><Download className="w-5 h-5" /></button>}
+                          <button onClick={() => handleDeleteAgreement(agreement.id)} className="p-2 text-stone-400 hover:text-red-600 transition-colors" title="Delete"><Trash2 className="w-5 h-5" /></button>
                         </div>
                       </td>
                     </tr>
@@ -401,6 +318,45 @@ export const Dashboard: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-stone-100">
+              {isLoading ? (
+                <div className="px-6 py-12 text-center text-stone-400">Loading...</div>
+              ) : filteredAgreements.length === 0 ? (
+                <div className="px-6 py-12 text-center text-stone-400">No agreements found</div>
+              ) : (
+                filteredAgreements.map((agreement) => (
+                  <div key={agreement.id} className="p-4 bg-white active:bg-stone-50 transition-colors">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                          {agreement.tourist_data?.first_name?.[0]}
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-bold text-stone-900">{agreement.tourist_data?.first_name} {agreement.tourist_data?.last_name}</div>
+                          <div className="text-xs text-stone-500">{agreement.tourist_data?.nationality} • {new Date(agreement.created_at).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      {getStatusBadge(agreement.status)}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
+                      <div className="text-stone-500">Bike: <span className="text-stone-900 font-medium">{agreement.bike_id || 'Not assigned'}</span></div>
+                      <div className="text-stone-500">Contact: <span className="text-stone-900 font-medium">{agreement.tourist_data?.phone_number}</span></div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-stone-50 pt-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => handleViewAgreement(agreement.id)} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-stone-600 bg-stone-50 rounded-lg min-h-[40px]"><Eye className="w-4 h-4" /> View</button>
+                        {agreement.pdf_url && <button onClick={() => handleDownloadPDF(agreement.id)} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-green-600 bg-green-50 rounded-lg min-h-[40px]"><Download className="w-4 h-4" /> PDF</button>}
+                      </div>
+                      <button onClick={() => handleDeleteAgreement(agreement.id)} className="p-2 text-stone-300 hover:text-red-600 transition-colors min-h-[40px] min-w-[40px]"><Trash2 className="w-5 h-5" /></button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 

@@ -16,8 +16,11 @@ import {
   AlertCircle,
   Edit3,
   Save,
-  X
+  X,
+  Settings2,
+  Loader2
 } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
 import { useBikesStore } from '@/stores/bikes';
 import { Logo } from '../components/Logo';
 
@@ -44,7 +47,7 @@ interface Agreement {
 export const AgreementDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   
   const [agreement, setAgreement] = useState<Agreement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,6 +162,7 @@ export const AgreementDetail: React.FC = () => {
       await agreementsAPI.update(id, payload);
       setAgreement({ ...agreement, bike_id: bikeId, status: 'completed' });
       setIsEditing(false);
+      await fetchAgreement();
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
@@ -211,28 +215,28 @@ export const AgreementDetail: React.FC = () => {
     switch (status) {
       case 'completed':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-            <CheckCircle className="w-4 h-4 mr-1" />
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-green-100 text-green-700 border border-green-200">
+            <CheckCircle className="w-3 h-3 mr-1.5" />
             Completed
           </span>
         );
       case 'pending':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-            <Clock className="w-4 h-4 mr-1" />
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+            <Clock className="w-3 h-3 mr-1.5" />
             Pending
           </span>
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-            <AlertCircle className="w-4 h-4 mr-1" />
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-red-100 text-red-700 border border-red-200">
+            <AlertCircle className="w-3 h-3 mr-1.5" />
             Expired
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-stone-100 text-stone-700 border border-stone-200">
             {status}
           </span>
         );
@@ -245,10 +249,13 @@ export const AgreementDetail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading agreement...</p>
+      <div className="min-h-screen bg-stone-50 flex flex-col">
+        <Navbar isAdmin userEmail={user.email} onLogout={logout} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-10 h-10 text-orange-600 animate-spin" />
+            <p className="text-stone-500 font-medium">Loading agreement details...</p>
+          </div>
         </div>
       </div>
     );
@@ -256,15 +263,18 @@ export const AgreementDetail: React.FC = () => {
 
   if (error || !agreement) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full mx-4">
-          <div className="text-center">
-            <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
-            <p className="text-gray-600 mb-6">{error || 'Agreement not found'}</p>
+      <div className="min-h-screen bg-stone-50 flex flex-col">
+        <Navbar isAdmin userEmail={user.email} onLogout={logout} />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-8 text-center border border-stone-100">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-stone-900 mb-2">Oops!</h2>
+            <p className="text-stone-600 mb-8">{error || 'Agreement not found'}</p>
             <button
               onClick={() => navigate('/dashboard')}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="w-full py-4 bg-stone-900 text-white font-bold rounded-xl hover:bg-stone-800 transition-colors shadow-lg shadow-stone-200"
             >
               Back to Dashboard
             </button>
@@ -275,289 +285,207 @@ export const AgreementDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="mr-4 p-2 text-gray-400 hover:text-gray-600"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <Logo width={120} className="mr-4" />
-              <h1 className="text-2xl font-bold text-gray-900">Agreement Details</h1>
-            </div>
-            <div className="flex items-center space-x-4"></div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-stone-50 pb-12">
+      <Navbar isAdmin userEmail={user.email} onLogout={logout} />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          {/* Status Header */}
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-lg font-medium text-gray-900">
+      <div className="max-w-4xl mx-auto px-4 pt-24 md:pt-32">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="p-2.5 bg-white border border-stone-200 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors min-h-[48px] min-w-[48px] flex items-center justify-center shadow-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-bold text-stone-900">
                   {agreement.tourist_data.first_name} {agreement.tourist_data.last_name}
-                </h2>
+                </h1>
                 {getStatusBadge(agreement.status)}
               </div>
-              <div className="text-sm text-gray-500">
-                <Calendar className="w-4 h-4 inline mr-1" />
-                {new Date(agreement.created_at).toLocaleDateString()}
+              <p className="text-stone-500 text-sm flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" />
+                Submitted on {new Date(agreement.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => (agreement?.pdf_url ? handleDownloadPDF() : handleGeneratePDF())}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all shadow-xl shadow-stone-200 min-h-[48px]"
+          >
+            <Download className="w-5 h-5" />
+            {agreement?.pdf_url ? 'Download PDF' : 'Generate PDF'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6">
+          {/* Tourist Details Card */}
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-stone-100 bg-stone-50/50 flex items-center gap-2">
+              <User className="w-5 h-5 text-orange-600" />
+              <h2 className="text-lg font-bold text-stone-900">Tourist Information</h2>
+            </div>
+            <div className="p-6 md:p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                <DetailItem label="Full Name" value={`${agreement.tourist_data.first_name} ${agreement.tourist_data.last_name}`} icon={User} />
+                <DetailItem label="Nationality" value={agreement.tourist_data.nationality} icon={MapPin} />
+                <DetailItem label="Passport Number" value={agreement.tourist_data.passport_no} icon={ArrowLeft} />
+                <DetailItem label="Email Address" value={agreement.tourist_data.email} icon={Mail} />
+                <DetailItem label="Phone Number" value={agreement.tourist_data.phone_number} icon={Phone} />
+                <DetailItem label="Hotel in Tangalle" value={agreement.tourist_data.hotel_name || 'N/A'} icon={MapPin} />
+                <div className="md:col-span-2">
+                  <DetailItem label="Home Address" value={agreement.tourist_data.home_address} icon={MapPin} />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Tourist Information */}
-          <div className="px-6 py-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-              <User className="w-5 h-5 mr-2 text-gray-400" />
-              Tourist Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Full Name</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {agreement.tourist_data.first_name} {agreement.tourist_data.last_name}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Nationality</label>
-                  <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.nationality}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Passport Number</label>
-                  <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.passport_no}</p>
-                </div>
+          {/* Management Section */}
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-stone-100 bg-stone-50/50 flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-orange-600" />
+              <h2 className="text-lg font-bold text-stone-900">Rental Management</h2>
+            </div>
+            
+            <div className="p-6 md:p-8 space-y-8">
+              {/* Dates & Rates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <ManagementInput 
+                  label="Start Date" 
+                  type="date" 
+                  value={startDate} 
+                  onChange={setStartDate} 
+                />
+                <ManagementInput 
+                  label="End Date" 
+                  type="date" 
+                  value={endDate} 
+                  onChange={setEndDate} 
+                />
+                <ManagementInput 
+                  label="Daily Rate (LKR)" 
+                  type="number" 
+                  value={dailyRate} 
+                  onChange={setDailyRate} 
+                  placeholder="e.g. 5000"
+                />
+                <ManagementInput 
+                  label="Deposit (LKR)" 
+                  type="number" 
+                  value={deposit} 
+                  onChange={setDeposit} 
+                  placeholder="e.g. 10000"
+                />
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
-                    Email
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.email}</p>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={async () => {
+                    if (!id) return;
+                    try {
+                      await agreementsAPI.update(id, {
+                        start_date: startDate,
+                        end_date: endDate,
+                        daily_rate: typeof dailyRate === 'number' ? dailyRate : undefined,
+                        deposit: typeof deposit === 'number' ? deposit : undefined
+                      });
+                      await fetchAgreement();
+                      alert('Changes saved successfully!');
+                    } catch {
+                      alert('Failed to save changes');
+                    }
+                  }}
+                  className="w-full md:w-auto px-8 py-3.5 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all shadow-lg shadow-stone-200 min-h-[48px]"
+                >
+                  Save Rental Details
+                </button>
+              </div>
+
+              <div className="h-px bg-stone-100" />
+
+              {/* Bike Assignment */}
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+                    <Bike className="w-5 h-5 text-stone-400" />
+                    Bike Assignment
+                  </h3>
+                  {!isEditing && (
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="text-orange-600 font-bold text-sm hover:text-orange-700 transition-colors flex items-center gap-1 min-h-[44px] px-4"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Change Bike
+                    </button>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 flex items-center">
-                    <Phone className="w-4 h-4 mr-1" />
-                    Phone Number
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.phone_number}</p>
-                </div>
-                {agreement.tourist_data.hotel_name && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500">Hotel Name</label>
-                    <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.hotel_name}</p>
+
+                {isEditing ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="md:col-span-2">
+                      <select
+                        value={bikeId}
+                        onChange={(e) => setBikeId(e.target.value)}
+                        className="w-full px-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all"
+                      >
+                        <option value="">Select a bike</option>
+                        {available.map((b) => (
+                          <option key={b.id} value={b.id}>{b.model} • {b.plate_no}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleUpdateBike}
+                        className="flex-1 px-6 py-3.5 bg-stone-900 text-white font-bold rounded-xl hover:bg-stone-800 transition-all min-h-[48px]"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="p-3.5 bg-stone-100 text-stone-600 font-bold rounded-xl hover:bg-stone-200 transition-all min-h-[48px]"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-5 rounded-2xl border border-stone-100 bg-stone-50 flex items-center justify-between">
+                    {agreement.bike_id ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+                          <Bike className="w-5 h-5 text-stone-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-stone-900">Bike ID: {agreement.bike_id}</p>
+                          <p className="text-xs text-stone-500 uppercase font-bold tracking-wider">Assigned to this rental</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-stone-500 italic">No bike assigned yet</p>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-500 flex items-center">
-                <MapPin className="w-4 h-4 mr-1" />
-                Home Address
-              </label>
-              <p className="mt-1 text-sm text-gray-900">{agreement.tourist_data.home_address}</p>
-            </div>
           </div>
 
-          {/* Actions */}
-          <div className="px-6 py-6 border-t border-gray-200 bg-gray-50">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Actions</h3>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => (agreement?.pdf_url ? handleDownloadPDF() : handleGeneratePDF())}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {agreement?.pdf_url ? 'Download PDF' : 'Generate & Download PDF'}
-              </button>
+          {/* Signature Preview */}
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-stone-100 bg-stone-50/50">
+              <h2 className="text-lg font-bold text-stone-900">Customer Signature</h2>
             </div>
-          </div>
-          
-          {/* Finalize Details (Admin) */}
-          <div className="px-6 py-6 border-t border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Finalize Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  disabled={!user || user.role !== 'admin'}
-                  className={`w-full px-3 py-2 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
+            <div className="p-8 flex justify-center bg-stone-50/30">
+              <div className="max-w-md w-full p-6 bg-white rounded-2xl border border-stone-100 shadow-inner">
+                <img 
+                  src={agreement.signature_url} 
+                  alt="Customer Signature" 
+                  className="max-h-32 w-auto mx-auto grayscale contrast-125"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  disabled={!user || user.role !== 'admin'}
-                  className={`w-full px-3 py-2 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (LKR)</label>
-                <input
-                  type="number"
-                  value={dailyRate === '' ? '' : dailyRate}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setDailyRate(v === '' ? '' : Number(v))
-                  }}
-                  placeholder="5000"
-                  disabled={!user || user.role !== 'admin'}
-                  className={`w-full px-3 py-2 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Deposit (LKR)</label>
-                <input
-                  type="number"
-                  value={deposit === '' ? '' : deposit}
-                  onChange={(e) => {
-                    const v = e.target.value
-                    setDeposit(v === '' ? '' : Number(v))
-                  }}
-                  disabled={!user || user.role !== 'admin'}
-                  className={`w-full px-3 py-2 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
-                />
-              </div>
-            </div>
-            <div className="mt-4">
-              <button
-                onClick={async () => {
-                  if (!id) return;
-                  try {
-                    await agreementsAPI.update(id, {
-                      start_date: startDate,
-                      end_date: endDate,
-                      daily_rate: typeof dailyRate === 'number' ? dailyRate : undefined,
-                      deposit: typeof deposit === 'number' ? deposit : undefined
-                    });
-                    await fetchAgreement();
-                    alert('Agreement finalized');
-                  } catch {
-                    alert('Failed to finalize agreement');
-                  }
-                }}
-                disabled={!user || user.role !== 'admin'}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Save Final Details
-              </button>
-            </div>
-          </div>
-          {/* Bike Assignment */}
-          <div className="px-6 py-6 border-t border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Bike className="w-5 h-5 mr-2 text-gray-400" />
-                Bike Assignment
-              </h3>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Edit3 className="w-4 h-4 mr-1" />
-                  Edit
-                </button>
-              )}
-            </div>
-            
-            {isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Available Bikes</label>
-                  <select
-                    value={bikeId}
-                    onChange={(e) => setBikeId(e.target.value)}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a bike</option>
-                    {available.map((b) => (
-                      <option key={b.id} value={b.id}>{b.model} • {b.plate_no} • {b.frame_no}</option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">Only bikes with status “available” are shown.</p>
-                </div>
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Daily Rate (LKR)</label>
-                  <input
-                    type="number"
-                    value={dailyRate === '' ? '' : dailyRate}
-                    onChange={(e) => {
-                      const v = e.target.value
-                      setDailyRate(v === '' ? '' : Number(v))
-                    }}
-                    placeholder="5000"
-                    disabled={!user || user.role !== 'admin'}
-                    className={`w-full px-3 py-3 border rounded-md ${(!user || user.role !== 'admin') ? 'bg-gray-100 text-gray-700 cursor-not-allowed border-gray-300' : 'border-gray-300'}`}
-                    title="Only administrators can modify this rate"
-                  />
-                </div>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={handleUpdateBike}
-                    className="inline-flex items-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Save className="w-4 h-4 mr-1" />
-                    Save
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setBikeId(agreement.bike_id || '');
-                    }}
-                    className="inline-flex items-center px-4 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-900">
-                {agreement.bike_id ? `Bike #${agreement.bike_id}` : 'No bike assigned yet'}
-              </p>
-            )}
-          </div>
-
-          {/* Signature */}
-          {agreement.signature_url && (
-            <div className="px-6 py-6 border-t border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Electronic Signature</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <img
-                  src={agreement.signature_url}
-                  alt="Electronic Signature"
-                  className="max-w-xs h-auto border border-gray-200 rounded"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Timestamps */}
-          <div className="px-6 py-6 border-t border-gray-200 bg-gray-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
-              <div>
-                <label className="block font-medium">Created</label>
-                <p>{new Date(agreement.created_at).toLocaleString()}</p>
-              </div>
-              <div>
-                <label className="block font-medium">Last Updated</label>
-                <p>{new Date(agreement.updated_at).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -566,3 +494,27 @@ export const AgreementDetail: React.FC = () => {
     </div>
   );
 };
+
+// Helper Components
+const DetailItem = ({ label, value, icon: Icon }: { label: string; value: string; icon: any }) => (
+  <div>
+    <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+      <Icon className="w-3 h-3" />
+      {label}
+    </label>
+    <p className="text-stone-900 font-medium">{value}</p>
+  </div>
+);
+
+const ManagementInput = ({ label, type, value, onChange, placeholder }: any) => (
+  <div className="space-y-2">
+    <label className="text-sm font-bold text-stone-700">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all text-sm font-medium"
+    />
+  </div>
+);

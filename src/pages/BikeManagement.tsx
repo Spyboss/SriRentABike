@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useBikesStore } from '@/stores/bikes';
 import { bikeMetaAPI } from '@/services/api';
-import { Plus, Edit3, Archive, RefreshCw, CheckCircle, AlertCircle, Search, Filter } from 'lucide-react';
-import { Logo } from '@/components/Logo';
+import { Plus, Edit3, Trash2, RefreshCw, CheckCircle, AlertCircle, Search, Filter, Bike, ChevronRight, X, Upload } from 'lucide-react';
+import { Navbar } from '@/components/Navbar';
 
 export default function BikeManagement() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { bikes, isLoading, error, fetchAll, createBike, updateBike, archiveBike, clearError } = useBikesStore();
+  const { bikes, isLoading, error, fetchAll, createBike, updateBike, clearError } = useBikesStore();
   const [filter, setFilter] = useState<'all' | 'available' | 'rented' | 'maintenance'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +39,10 @@ export default function BikeManagement() {
   const startCreate = () => {
     setEditingId(null);
     setForm({ model: '', frame_no: '', plate_no: '', availability_status: 'available' });
+    setColor('#ffffff');
+    setSpecs('');
+    setDocs(null);
+    setDocUrls([]);
     clearError();
     setShowForm(true);
   };
@@ -52,7 +56,7 @@ export default function BikeManagement() {
     setShowForm(true);
     bikeMetaAPI.get(id).then(r => {
       const meta = r.data?.meta || {};
-      setColor(meta.color || '');
+      setColor(meta.color || '#ffffff');
       setSpecs(meta.specs || '');
     }).catch(() => {});
     bikeMetaAPI.listDocs(id).then(r => setDocUrls(r.data?.urls || [])).catch(() => setDocUrls([]));
@@ -60,137 +64,216 @@ export default function BikeManagement() {
 
   const submitForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await updateBike(editingId, form);
-      await bikeMetaAPI.put(editingId, { color, specs });
-      if (docs && docs.length) {
-        await bikeMetaAPI.uploadDocs(editingId, Array.from(docs));
-      }
-    } else {
-      await createBike(form);
-      const created = bikes.find(b => b.frame_no === form.frame_no && b.plate_no === form.plate_no);
-      if (created) {
-        await bikeMetaAPI.put(created.id, { color, specs });
+    try {
+      if (editingId) {
+        await updateBike(editingId, form);
+        await bikeMetaAPI.put(editingId, { color, specs });
         if (docs && docs.length) {
-          await bikeMetaAPI.uploadDocs(created.id, Array.from(docs));
+          await bikeMetaAPI.uploadDocs(editingId, Array.from(docs));
+        }
+      } else {
+        await createBike(form);
+        const created = bikes.find(b => b.frame_no === form.frame_no && b.plate_no === form.plate_no);
+        if (created) {
+          await bikeMetaAPI.put(created.id, { color, specs });
+          if (docs && docs.length) {
+            await bikeMetaAPI.uploadDocs(created.id, Array.from(docs));
+          }
         }
       }
+      setShowForm(false);
+      fetchAll();
+    } catch (err) {
+      console.error('Failed to save bike:', err);
     }
-    setShowForm(false);
   };
 
   const doArchive = async (id: string) => {
-    const confirmed = window.confirm('Are you sure you want to delete this bike? This will archive or delete based on references.');
-    if (!confirmed) return;
-    // Try delete; if fails, fallback to archive
+    if (!window.confirm('Are you sure you want to delete this bike?')) return;
     try {
       await bikeMetaAPI.deleteBike(id);
       await fetchAll();
-    } catch {
-      await archiveBike(id);
+    } catch (err) {
+      console.error('Failed to delete bike:', err);
     }
   };
 
+  const StatusBadge = ({ status }: { status: string }) => {
+    const styles = {
+      available: 'bg-green-100 text-green-700 border-green-200',
+      rented: 'bg-orange-100 text-orange-700 border-orange-200',
+      maintenance: 'bg-stone-100 text-stone-700 border-stone-200'
+    };
+    return (
+      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${styles[status as keyof typeof styles] || styles.maintenance}`}>
+        {status.toUpperCase()}
+      </span>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Logo width={120} />
-              <h1 className="text-2xl font-bold text-gray-900 border-l pl-4 border-gray-300">Bike Management</h1>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button onClick={startCreate} className="inline-flex items-center px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                <Plus className="w-4 h-4 mr-2" />
-                New Bike
-              </button>
-              <button onClick={() => fetchAll()} className="inline-flex items-center px-3 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh
-              </button>
-            </div>
+    <div className="min-h-screen bg-stone-50 flex flex-col">
+      <Navbar />
+
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 pt-24 md:pt-32 pb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-black text-stone-900 tracking-tight">Bike Fleet</h1>
+            <p className="text-stone-500 font-medium">Manage your rental inventory and bike status</p>
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <button 
+              onClick={startCreate} 
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all shadow-xl shadow-stone-200 min-h-[48px]"
+            >
+              <Plus className="w-5 h-5" />
+              Add Bike
+            </button>
+            <button 
+              onClick={() => fetchAll()} 
+              className="inline-flex items-center justify-center p-3.5 bg-white border border-stone-200 text-stone-600 rounded-2xl hover:bg-stone-50 transition-all min-h-[48px] min-w-[48px]"
+            >
+              <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white p-4 rounded-md shadow mb-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center border rounded px-2 py-1">
-              <Search className="w-4 h-4 text-gray-500 mr-2" />
+        <div className="bg-white p-4 md:p-6 rounded-[2rem] shadow-sm border border-stone-100 mb-8">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 group-focus-within:text-orange-500 transition-colors" />
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search model/frame/plate"
-                className="outline-none text-sm"
+                placeholder="Search by model, frame or plate..."
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all min-h-[48px]"
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as 'all' | 'available' | 'rented' | 'maintenance')}
-                className="border rounded px-2 py-1 text-sm"
-              >
-                <option value="all">All</option>
-                <option value="available">Available</option>
-                <option value="rented">Rented</option>
-                <option value="maintenance">Maintenance</option>
-              </select>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 md:w-48">
+                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value as any)}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all appearance-none text-sm font-bold min-h-[48px]"
+                >
+                  <option value="all">All Status</option>
+                  <option value="available">Available</option>
+                  <option value="rented">Rented</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-            <div className="flex">
-              <AlertCircle className="w-5 h-5 text-red-400 mt-0.5" />
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            </div>
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-8 flex items-center gap-3 text-red-600 font-medium">
+            <AlertCircle className="w-5 h-5" />
+            {error}
           </div>
         )}
 
-        <div className="bg-white rounded-md shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frame No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plate No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+        {/* Mobile Card View */}
+        <div className="grid grid-cols-1 md:hidden gap-4">
+          {isLoading ? (
+            <div className="py-12 text-center text-stone-400">Loading fleet...</div>
+          ) : filtered.length === 0 ? (
+            <div className="py-12 text-center text-stone-400 bg-white rounded-3xl border border-stone-100">No bikes found</div>
+          ) : (
+            filtered.map((b) => (
+              <div key={b.id} className="bg-white p-5 rounded-3xl border border-stone-100 shadow-sm active:scale-[0.98] transition-all">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600">
+                      <Bike className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-stone-900">{b.model}</h3>
+                      <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{b.plate_no}</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={b.availability_status} />
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
+                  <div>
+                    <span className="block text-stone-400 text-[10px] font-black uppercase tracking-wider mb-0.5">Frame Number</span>
+                    <span className="font-mono font-bold text-stone-700">{b.frame_no}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => startEdit(b.id)} 
+                    className="flex-1 py-3 bg-stone-100 text-stone-900 font-bold rounded-xl hover:bg-stone-200 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <Edit3 className="w-4 h-4" /> Edit
+                  </button>
+                  <button 
+                    onClick={() => doArchive(b.id)} 
+                    className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block bg-white rounded-[2rem] shadow-sm border border-stone-100 overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-stone-50 border-b border-stone-100">
+                <th className="px-8 py-5 text-left text-xs font-black text-stone-400 uppercase tracking-widest">Bike Info</th>
+                <th className="px-8 py-5 text-left text-xs font-black text-stone-400 uppercase tracking-widest">Identifiers</th>
+                <th className="px-8 py-5 text-left text-xs font-black text-stone-400 uppercase tracking-widest">Status</th>
+                <th className="px-8 py-5 text-right text-xs font-black text-stone-400 uppercase tracking-widest">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-stone-100">
               {isLoading ? (
-                <tr><td className="px-6 py-4 text-sm text-gray-500">Loading...</td></tr>
+                <tr><td colSpan={4} className="px-8 py-12 text-center text-stone-400">Loading fleet...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td className="px-6 py-4 text-sm text-gray-500">No bikes found</td></tr>
+                <tr><td colSpan={4} className="px-8 py-12 text-center text-stone-400">No bikes found</td></tr>
               ) : (
                 filtered.map((b) => (
-                  <tr key={b.id}>
-                    <td className="px-6 py-4 text-sm text-gray-900">{b.model}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{b.frame_no}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{b.plate_no}</td>
-                    <td className="px-6 py-4 text-sm">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        b.availability_status === 'available' ? 'bg-green-100 text-green-800' :
-                        b.availability_status === 'rented' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {b.availability_status}
-                      </span>
+                  <tr key={b.id} className="hover:bg-stone-50/50 transition-colors group">
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-stone-100 flex items-center justify-center text-stone-600 group-hover:bg-orange-100 group-hover:text-orange-600 transition-colors">
+                          <Bike className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-black text-stone-900">{b.model}</p>
+                          <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Registered Fleet</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <div className="flex space-x-2">
-                        <button onClick={() => startEdit(b.id)} className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100">
-                          <Edit3 className="w-4 h-4 mr-1" /> Edit
+                    <td className="px-8 py-5">
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-stone-700">Plate: <span className="text-orange-600">{b.plate_no}</span></p>
+                        <p className="text-[10px] font-mono text-stone-400">Frame: {b.frame_no}</p>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <StatusBadge status={b.availability_status} />
+                    </td>
+                    <td className="px-8 py-5 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button 
+                          onClick={() => startEdit(b.id)} 
+                          className="p-2.5 bg-stone-100 text-stone-600 rounded-xl hover:bg-stone-900 hover:text-white transition-all"
+                          title="Edit Bike"
+                        >
+                          <Edit3 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => doArchive(b.id)} className="inline-flex items-center px-2 py-1 rounded-md bg-gray-50 text-gray-700 hover:bg-gray-100">
-                          <Archive className="w-4 h-4 mr-1" /> Archive
+                        <button 
+                          onClick={() => doArchive(b.id)} 
+                          className="p-2.5 bg-stone-100 text-stone-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                          title="Delete Bike"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -202,75 +285,120 @@ export default function BikeManagement() {
         </div>
       </div>
 
+      {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-md w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Bike' : 'Add New Bike'}</h2>
-            <form onSubmit={submitForm} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Model *</label>
-                <input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Frame No *</label>
-                <input value={form.frame_no} onChange={(e) => setForm({ ...form, frame_no: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Plate No *</label>
-                <input value={form.plate_no} onChange={(e) => setForm({ ...form, plate_no: e.target.value })} required className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select value={form.availability_status} onChange={(e) => setForm({ ...form, availability_status: e.target.value as 'available' | 'rented' | 'maintenance' })} className="w-full px-3 py-3 border border-gray-300 rounded-md">
-                  <option value="available">available</option>
-                  <option value="rented">rented</option>
-                  <option value="maintenance">maintenance</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                  <input type="color" value={color || '#ffffff'} onChange={(e) => setColor(e.target.value)} className="w-16 h-12 p-0 border border-gray-300 rounded-md" />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+          <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" onClick={() => setShowForm(false)} />
+          <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300">
+            <div className="px-8 py-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+              <h2 className="text-xl font-black text-stone-900">{editingId ? 'Edit Bike Details' : 'Add New Bike'}</h2>
+              <button onClick={() => setShowForm(false)} className="p-2 hover:bg-stone-200 rounded-xl transition-colors">
+                <X className="w-5 h-5 text-stone-500" />
+              </button>
+            </div>
+            
+            <form onSubmit={submitForm} className="p-8 space-y-6 max-h-[80vh] overflow-y-auto">
+              <div className="grid grid-cols-1 gap-5">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700 ml-1">Bike Model *</label>
+                  <input 
+                    value={form.model} 
+                    onChange={(e) => setForm({ ...form, model: e.target.value })} 
+                    required 
+                    placeholder="e.g., Honda Dio"
+                    className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
+                  />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Specifications</label>
-                  <input value={specs} onChange={(e) => setSpecs(e.target.value)} placeholder="e.g., helmet size, tank capacity" className="w-full px-3 py-3 border border-gray-300 rounded-md" />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-stone-700 ml-1">Plate Number *</label>
+                    <input 
+                      value={form.plate_no} 
+                      onChange={(e) => setForm({ ...form, plate_no: e.target.value })} 
+                      required 
+                      placeholder="WP BAX-1234"
+                      className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-stone-700 ml-1">Frame Number *</label>
+                    <input 
+                      value={form.frame_no} 
+                      onChange={(e) => setForm({ ...form, frame_no: e.target.value })} 
+                      required 
+                      placeholder="FRAME123456"
+                      className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700 ml-1">Current Status</label>
+                  <div className="flex p-1 bg-stone-100 rounded-2xl gap-1">
+                    {(['available', 'rented', 'maintenance'] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setForm({ ...form, availability_status: s })}
+                        className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all min-h-[44px] ${form.availability_status === s ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-400 hover:text-stone-600'}`}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-stone-700 ml-1">Color</label>
+                    <div className="flex items-center gap-3 p-2 bg-stone-50 rounded-2xl border border-stone-200">
+                      <input type="color" value={color || '#ffffff'} onChange={(e) => setColor(e.target.value)} className="w-12 h-10 rounded-xl border-none p-0 cursor-pointer" />
+                      <span className="text-xs font-mono font-bold text-stone-500 uppercase">{color}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-stone-700 ml-1">Specifications</label>
+                    <input value={specs} onChange={(e) => setSpecs(e.target.value)} placeholder="e.g., 110cc, 2 Helmets" className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700 ml-1">Documentation</label>
+                  <div className="relative group">
+                    <input 
+                      type="file" 
+                      multiple 
+                      onChange={(e) => setDocs(e.target.files)} 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                    />
+                    <div className="w-full px-5 py-6 rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 flex flex-col items-center justify-center gap-2 group-hover:border-orange-300 transition-colors">
+                      <Upload className="w-6 h-6 text-stone-400" />
+                      <span className="text-sm font-bold text-stone-500">{docs ? `${docs.length} files selected` : 'Click or drag documents to upload'}</span>
+                    </div>
+                  </div>
+                  {docUrls.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">Current Documents</p>
+                      <div className="flex flex-wrap gap-2">
+                        {docUrls.map((u, i) => (
+                          <a key={i} href={u} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-lg text-xs font-bold hover:bg-stone-200 transition-colors truncate max-w-[150px]">
+                            Doc {i + 1}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Documentation Uploads</label>
-                <input type="file" multiple onChange={(e) => setDocs(e.target.files)} className="w-full text-sm py-2" />
-                {docUrls.length > 0 && (
-                  <ul className="mt-2 text-sm text-gray-600">
-                    {docUrls.map((u) => <li key={u}><a href={u} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{u}</a></li>)}
-                  </ul>
-                )}
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button type="button" onClick={() => setShowForm(false)} className="px-5 py-3 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
-                <button type="submit" className="px-5 py-3 rounded-md bg-blue-600 text-white hover:bg-blue-700">{editingId ? 'Save' : 'Create'}</button>
+
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 font-bold rounded-2xl hover:bg-stone-200 transition-all min-h-[56px]">Cancel</button>
+                <button type="submit" className="flex-2 py-4 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 transition-all min-h-[56px] px-10 shadow-lg shadow-stone-200">
+                  {editingId ? 'Save Changes' : 'Create Bike'}
+                </button>
               </div>
             </form>
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3 mt-4">
-                <div className="flex">
-                  <AlertCircle className="w-4 h-4 text-red-400 mt-0.5" />
-                  <div className="ml-2">
-                    <p className="text-sm text-red-800">{error}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {!error && !isLoading && (
-              <div className="bg-green-50 border border-green-200 rounded-md p-3 mt-4">
-                <div className="flex">
-                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-                  <div className="ml-2">
-                    <p className="text-sm text-green-800">Ready</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

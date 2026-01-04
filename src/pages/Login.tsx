@@ -13,103 +13,99 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (error) {
-      // Error is handled in the store
       console.error('Login failed:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="flex flex-col items-center">
-          <Logo width={200} className="mb-4" />
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Admin Login
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            SriRentABike Management System
-          </p>
+    <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="max-w-md w-full">
+        <div className="flex flex-col items-center mb-10">
+          <Logo width={180} className="mb-8" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-4">
+            <Lock className="w-3 h-3" /> Secure Access
+          </div>
+          <h2 className="text-3xl font-black text-stone-900 tracking-tight">Admin Login</h2>
+          <p className="mt-2 text-stone-500 font-medium">SriRentABike Management</p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+        <div className="bg-white rounded-[2rem] shadow-xl shadow-stone-200/50 border border-stone-100 p-8 sm:p-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-stone-700 ml-1">Email Address</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-orange-500 text-stone-400">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full pl-12 pr-4 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder-stone-300 text-stone-900 font-medium min-h-[56px]"
+                    placeholder="admin@srirentabike.com"
+                  />
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none rounded-none rounded-t-md relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
-                />
               </div>
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none rounded-none rounded-b-md relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-            </div>
-          </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-stone-700 ml-1">Password</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-orange-500 text-stone-400">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full pl-12 pr-4 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder-stone-300 text-stone-900 font-medium min-h-[56px]"
+                    placeholder="••••••••"
+                  />
                 </div>
               </div>
             </div>
-          )}
 
-          <div>
+            {error && (
+              <div className="rounded-2xl bg-red-50 p-4 border border-red-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                </div>
+                <p className="text-sm text-red-800 font-medium">{error}</p>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-4 bg-stone-900 text-white font-bold rounded-2xl hover:bg-stone-800 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-stone-200 min-h-[56px] flex items-center justify-center gap-3"
             >
               {isLoading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Signing in...
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/20 border-t-white"></div>
+                  <span>Signing in...</span>
                 </div>
               ) : (
-                'Sign in'
+                <span>Sign in to Dashboard</span>
               )}
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
+        
+        <p className="mt-10 text-center text-stone-400 text-sm font-medium">
+          &copy; {new Date().getFullYear()} SriRentABike Tangalle. All rights reserved.
+        </p>
       </div>
     </div>
   );

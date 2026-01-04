@@ -8,6 +8,8 @@ import PublicRentForm from "@/pages/PublicRentForm";
 import PublicAgreementStatus from "@/pages/PublicAgreementStatus";
 import BikeManagement from "@/pages/BikeManagement";
 
+import PricingManagement from "@/pages/PricingManagement";
+
 export default function App() {
   return (
     <Router>
@@ -19,6 +21,7 @@ export default function App() {
         <Route path="/agreements/:id" element={<AgreementDetail />} />
         <Route path="/agreement/:reference" element={<PublicAgreementStatus />} />
         <Route path="/admin/bikes" element={<BikeManagement />} />
+        <Route path="/admin/pricing" element={<PricingManagement />} />
         <Route path="/rent/:token" element={<GuestForm />} />
       </Routes>
     </Router>

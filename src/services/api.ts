@@ -109,8 +109,10 @@ export const bikeMetaAPI = {
   deleteBike: (id: string) => api.delete(`/bikes/${id}`)
 }
 
-// Daily rate API
+// Daily rate & Pricing API
 export const rateAPI = {
   get: () => api.get('/settings/daily-rate'),
-  update: (daily_rate: number) => api.put('/settings/daily-rate', { daily_rate })
+  update: (daily_rate: number) => api.put('/settings/daily-rate', { daily_rate }),
+  getPricing: () => api.get('/settings/pricing'),
+  updatePricing: (data: unknown) => api.put('/settings/pricing', data)
 }

@@ -2,18 +2,14 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { Lock, MapPin, ArrowRight, Phone, Mail, Clock, Car } from 'lucide-react';
-import { Logo } from '../components/Logo';
+import { Navbar } from '@/components/Navbar';
+import { Logo } from '@/components/Logo';
 
 export default function Home() {
   const navigate = useNavigate();
 
-  const handleAdminLogin = () => {
-    navigate('/login');
-  };
-
-  const handlePublicForm = () => {
-    navigate('/rent');
-  };
+  const handlePublicForm = () => navigate('/rent');
+  const handleAdminLogin = () => navigate('/login');
 
   const galleryImages = [
     '/customer-1.jpg',
@@ -36,36 +32,10 @@ export default function Home() {
         <link rel="canonical" href="https://www.srirentabike.com/" />
       </Helmet>
 
-      {/* Navigation */}
-      <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 border-b border-stone-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex-shrink-0 flex items-center gap-3">
-              <Logo width={80} />
-              <span className="hidden md:block text-xl font-bold text-stone-900 tracking-tight">SriRentABike</span>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-4">
-              <button
-                onClick={handleAdminLogin}
-                className="inline-flex items-center px-3 py-2 border border-stone-200 text-sm font-medium rounded-full text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors duration-200"
-                aria-label="Admin Login"
-              >
-                <Lock className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Admin</span>
-              </button>
-              <button
-                onClick={handlePublicForm}
-                className="inline-flex items-center px-4 py-2.5 sm:px-5 sm:py-2.5 text-sm font-medium rounded-full text-white bg-stone-900 hover:bg-stone-800 transition-colors duration-200 shadow-md"
-              >
-                Rent Now
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
-      <div className="relative pt-20">
+      <div className="relative pt-16 md:pt-20">
         <div className="absolute inset-0 z-0">
           <img
             src="/hero.jpg"
@@ -75,29 +45,29 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/40 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[700px] h-[85vh] flex items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[500px] md:min-h-[700px] h-[80vh] md:h-[85vh] flex items-center">
           <div className="max-w-2xl text-left">
-            <span className="inline-block px-4 py-1 rounded-full bg-orange-500/90 text-white text-sm font-medium mb-6 backdrop-blur-sm">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-orange-500/90 text-white text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
               Authentic Bike Rentals in Tangalle
             </span>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+            <h1 className="text-4xl md:text-7xl font-bold text-white mb-4 md:mb-6 leading-tight drop-shadow-lg">
               Ride the <br/>
               <span className="text-orange-400">Soul</span> of the City
             </h1>
-            <p className="text-xl md:text-2xl text-stone-100 mb-10 font-light drop-shadow-md leading-relaxed max-w-xl">
+            <p className="text-lg md:text-2xl text-stone-100 mb-8 md:mb-10 font-light drop-shadow-md leading-relaxed max-w-xl">
               Explore Tangalle and the South Coast on your own terms. Scooters, motorbikes, and hassle-free transport for the perfect Sri Lankan adventure.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={handlePublicForm}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-full text-stone-900 bg-white hover:bg-stone-100 transition-all duration-300 shadow-xl hover:scale-105"
+                onClick={() => navigate('/rent')}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium rounded-full text-stone-900 bg-white hover:bg-stone-100 transition-all duration-300 shadow-xl hover:scale-105 min-h-[56px]"
               >
                 Start Your Journey
                 <ArrowRight className="ml-2 w-5 h-5" />
               </button>
               <button
                 onClick={() => document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-lg font-medium rounded-full text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300"
+                className="inline-flex items-center justify-center px-8 py-4 border-2 border-white/30 text-lg font-medium rounded-full text-white hover:bg-white/10 backdrop-blur-sm transition-all duration-300 min-h-[56px]"
               >
                 View Gallery
               </button>
