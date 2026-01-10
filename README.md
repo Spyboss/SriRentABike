@@ -11,7 +11,6 @@ A modern, mobile-first digital rental agreement system that replaces paper workf
 - **PDF Generation**: Professional PDF generation with company branding
 - **Mobile First**: Optimized for mobile devices and tablets
 - **Secure Authentication**: JWT-based authentication for admin users
-- Real-time Updates: Live agreement status updates
 
 ## Mobile Optimization Strategy
 
@@ -61,7 +60,7 @@ You can update the `logo.url`, `companyName`, and other branding assets in these
 - Supabase for database and authentication
 - JWT for secure token management
 - Puppeteer for PDF generation
-- Joi for input validation
+- Custom Request Validation
 - Rate limiting for API protection
 
 ### Database
@@ -99,7 +98,13 @@ PORT=3001
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=24h
 NODE_ENV=development
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+MAX_FILE_SIZE=5242880
+UPLOAD_DIR=uploads
+FRONTEND_URL=http://localhost:5173
 ```
 
 ### 3. Database Setup
@@ -107,6 +112,7 @@ NODE_ENV=development
 2. Use the SQL editor to run migrations in order:
    - `api/supabase/migrations/20241201_initial_schema.sql`
    - `api/supabase/migrations/20241212_admin_controls.sql`
+   - `api/supabase/migrations/20250104_add_requested_model.sql`
 3. Create the public storage bucket automatically:
    ```bash
    cd api
@@ -180,6 +186,8 @@ npm run build
 - `GET /api/agreements/:id` - Get specific agreement (admin)
 - `POST /api/agreements` - Create new agreement (guest)
 - `PUT /api/agreements/:id` - Update agreement (admin)
+- `DELETE /api/agreements/:id` - Delete agreement (admin)
+- `GET /api/agreements/:id/audit` - Agreement audit events (admin)
 - `GET /api/agreements/public/:reference` - Public agreement status
 
 ### Guest Links
@@ -205,6 +213,15 @@ npm run build
 - `POST /api/bikes/:id/docs` - Upload bike documents (admin)
 - `GET /api/bikes/:id/docs` - List bike documents (admin)
 
+### Settings
+- `GET /api/settings/pricing` - Get pricing configuration (public)
+- `PUT /api/settings/pricing` - Update pricing configuration (admin)
+- `GET /api/settings/daily-rate` - Get daily rate (public)
+- `PUT /api/settings/daily-rate` - Update daily rate (admin)
+
+### Health
+- `GET /api/health` - Service health check
+
 ## Database Schema
 
 ### Tables
@@ -221,7 +238,7 @@ See technical architecture documentation for complete schema.
 - JWT-based authentication
 - Row Level Security (RLS) policies
 - Rate limiting on API endpoints
-- Input validation with Joi
+- Custom request validation
 - Secure file upload handling
 - Environment variable protection
 - Service role key used server-side only for Supabase operations
