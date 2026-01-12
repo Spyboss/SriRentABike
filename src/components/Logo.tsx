@@ -21,7 +21,7 @@ export const Logo: React.FC<LogoProps> = ({
         style={{
           width: width || undefined,
           height: height || undefined,
-          minWidth: `${BRANDING.logo.width.mobile}px`,
+          minWidth: width ? undefined : `${BRANDING.logo.width.mobile}px`,
           maxWidth: '100%',
           aspectRatio: BRANDING.logo.aspectRatio,
         }}
