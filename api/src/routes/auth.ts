@@ -63,6 +63,13 @@ router.get('/me', authenticateToken, (req: AuthRequest, res: express.Response) =
 // Create initial admin user (for development)
 router.post('/setup-admin', async (req: express.Request, res: express.Response) => {
   try {
+    if (config.nodeEnv === 'production') {
+      return res.status(403).json({ error: 'Admin setup is disabled in production' });
+    }
+    const providedToken = req.header('x-setup-token');
+    if (config.setupAdminToken && providedToken !== config.setupAdminToken) {
+      return res.status(403).json({ error: 'Invalid setup token' });
+    }
     const { email, password } = req.body;
 
     if (!email || !password) {
