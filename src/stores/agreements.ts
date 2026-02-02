@@ -54,7 +54,7 @@ interface AgreementsState {
   error: string | null;
   
   // Actions
-  fetchAgreements: () => Promise<void>;
+  fetchAgreements: (filters?: { search?: string; status?: string }) => Promise<void>;
   fetchAgreement: (id: string) => Promise<Agreement | null>;
   updateAgreement: (id: string, data: Partial<Agreement>) => Promise<void>;
   clearError: () => void;
@@ -65,11 +65,11 @@ export const useAgreementsStore = create<AgreementsState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  fetchAgreements: async () => {
+  fetchAgreements: async (filters) => {
     set({ isLoading: true, error: null });
     
     try {
-      const response = await agreementsAPI.getAll();
+      const response = await agreementsAPI.getAll(filters);
       const serverAgreements: ServerAgreement[] = response.data.agreements ?? [];
       const mapped = serverAgreements.map((a) => ({
         id: a.id,

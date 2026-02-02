@@ -155,10 +155,23 @@ export const AgreementDetail: React.FC = () => {
     if (!id || !agreement) return;
     
     try {
-      const payload: Record<string, unknown> = { bike_id: bikeId };
-      if (typeof dailyRate === 'number') {
-        payload.daily_rate = dailyRate;
+      const payload: Record<string, unknown> = { 
+        bike_id: bikeId,
+        start_date: startDate,
+        end_date: endDate,
+        deposit: typeof deposit === 'number' ? deposit : undefined,
+        daily_rate: typeof dailyRate === 'number' ? dailyRate : undefined,
+      };
+
+      // Calculate total amount
+      if (typeof dailyRate === 'number' && startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        payload.total_amount = diffDays * dailyRate;
       }
+
       await agreementsAPI.update(id, payload);
       setAgreement({ ...agreement, bike_id: bikeId, status: 'completed' });
       setIsEditing(false);
@@ -166,7 +179,7 @@ export const AgreementDetail: React.FC = () => {
     } catch (error: unknown) {
       const msg =
         (error as { response?: { data?: { error?: string } } }).response?.data?.error ||
-        'Failed to update bike assignment';
+        'Failed to update agreement';
       alert(msg);
     }
   };
@@ -386,12 +399,23 @@ export const AgreementDetail: React.FC = () => {
                   onClick={async () => {
                     if (!id) return;
                     try {
-                      await agreementsAPI.update(id, {
+                      const payload: Record<string, unknown> = {
                         start_date: startDate,
                         end_date: endDate,
                         daily_rate: typeof dailyRate === 'number' ? dailyRate : undefined,
                         deposit: typeof deposit === 'number' ? deposit : undefined
-                      });
+                      };
+
+                      // Calculate total amount
+                      if (typeof dailyRate === 'number' && startDate && endDate) {
+                        const start = new Date(startDate);
+                        const end = new Date(endDate);
+                        const diffTime = Math.abs(end.getTime() - start.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        payload.total_amount = diffDays * dailyRate;
+                      }
+
+                      await agreementsAPI.update(id, payload);
                       await fetchAgreement();
                       alert('Changes saved successfully!');
                     } catch {

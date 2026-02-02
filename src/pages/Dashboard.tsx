@@ -27,7 +27,19 @@ export const Dashboard: React.FC = () => {
   const { agreements, isLoading, error, fetchAgreements } = useAgreementsStore();
   
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'expired'>('all');
+
+  // Debounce search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -36,8 +48,11 @@ export const Dashboard: React.FC = () => {
       return;
     }
     
-    fetchAgreements();
-  }, [user, navigate, fetchAgreements]);
+    fetchAgreements({
+      search: debouncedSearchTerm || undefined,
+      status: statusFilter === 'all' ? undefined : statusFilter
+    });
+  }, [user, navigate, fetchAgreements, debouncedSearchTerm, statusFilter]);
 
   const handleLogout = async () => {
     await logout();
@@ -66,24 +81,15 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const filteredAgreements = agreements.filter(agreement => {
-    const matchesSearch = 
-      agreement.tourist_data?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agreement.tourist_data?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agreement.tourist_data?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      agreement.tourist_data?.passport_no?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || agreement.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
   const handleDeleteAgreement = async (id: string) => {
     const confirmed = window.confirm('Are you sure you want to delete this agreement? This will soft-delete the record.');
     if (!confirmed) return;
     try {
       await agreementsAPI.delete(id);
-      await fetchAgreements();
+      await fetchAgreements({
+        search: debouncedSearchTerm || undefined,
+        status: statusFilter === 'all' ? undefined : statusFilter
+      });
     } catch {
       alert('Failed to delete agreement');
     }
@@ -282,10 +288,10 @@ export const Dashboard: React.FC = () => {
               <tbody className="bg-white divide-y divide-stone-100">
                 {isLoading ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-stone-400">Loading...</td></tr>
-                ) : filteredAgreements.length === 0 ? (
+                ) : agreements.length === 0 ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-stone-400">No agreements found</td></tr>
                 ) : (
-                  filteredAgreements.map((agreement) => (
+                  agreements.map((agreement) => (
                     <tr key={agreement.id} className="hover:bg-stone-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -323,10 +329,10 @@ export const Dashboard: React.FC = () => {
             <div className="md:hidden divide-y divide-stone-100">
               {isLoading ? (
                 <div className="px-6 py-12 text-center text-stone-400">Loading...</div>
-              ) : filteredAgreements.length === 0 ? (
+              ) : agreements.length === 0 ? (
                 <div className="px-6 py-12 text-center text-stone-400">No agreements found</div>
               ) : (
-                filteredAgreements.map((agreement) => (
+                agreements.map((agreement) => (
                   <div key={agreement.id} className="p-4 bg-white active:bg-stone-50 transition-colors">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center">

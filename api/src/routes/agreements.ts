@@ -276,25 +276,47 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 
     // If assigning a bike, update bike availability
     if (updates.bike_id) {
-      const { data: bike, error: bikeError } = await supabase
+      // 1. Get current agreement to check for previous bike
+      const { data: currentAgreement, error: fetchError } = await supabase
+        .from('agreements')
+        .select('bike_id')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) {
+        return res.status(404).json({ error: 'Agreement not found' });
+      }
+
+      // 2. Check new bike availability
+      const { data: newBike, error: bikeError } = await supabase
         .from('bikes')
         .select('availability_status')
         .eq('id', updates.bike_id)
         .single();
 
-      if (bikeError) {
+      if (bikeError || !newBike) {
         return res.status(400).json({ error: 'Invalid bike ID' });
       }
 
-      if (bike.availability_status !== 'available') {
+      if (newBike.availability_status !== 'available' && currentAgreement.bike_id !== updates.bike_id) {
         return res.status(400).json({ error: 'Bike is not available' });
       }
 
-      // Update bike status
-      await supabase
-        .from('bikes')
-        .update({ availability_status: 'rented' })
-        .eq('id', updates.bike_id);
+      // 3. Handle old bike if exists and is different
+      if (currentAgreement.bike_id && currentAgreement.bike_id !== updates.bike_id) {
+        await supabase
+          .from('bikes')
+          .update({ availability_status: 'available' })
+          .eq('id', currentAgreement.bike_id);
+      }
+
+      // 4. Update new bike status
+      if (currentAgreement.bike_id !== updates.bike_id) {
+        await supabase
+          .from('bikes')
+          .update({ availability_status: 'rented' })
+          .eq('id', updates.bike_id);
+      }
     }
 
     // Update agreement
@@ -314,6 +336,13 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
       .single();
 
     if (error) {
+      // Rollback bike status if agreement update fails
+      if (updates.bike_id) {
+        await supabase
+          .from('bikes')
+          .update({ availability_status: 'available' })
+          .eq('id', updates.bike_id);
+      }
       if (error.code === 'PGRST116') {
         return res.status(404).json({ error: 'Agreement not found' });
       }
