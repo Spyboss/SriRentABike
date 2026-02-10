@@ -3,7 +3,7 @@ import { Schema } from 'joi';
 
 export const validateRequest = (schema: Schema) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const { error } = schema.validate(req.body, {
+    const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true
     });
@@ -15,6 +15,7 @@ export const validateRequest = (schema: Schema) => {
       return res.status(400).json({ error: errorMessage });
     }
 
+    req.body = value;
     next();
   };
 };

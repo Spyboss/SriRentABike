@@ -62,10 +62,17 @@ test.describe('SriRentABike Handover Verification', () => {
   test('Accessibility: Basic keyboard navigation', async ({ page }) => {
     await page.goto('/');
     
-    // Press Tab and check if focus moves to first link
+    // Press Tab and check if focus moves to an interactive element
     await page.keyboard.press('Tab');
-    const focusedElement = await page.evaluate(() => document.activeElement?.tagName);
-    expect(focusedElement).toBeTruthy();
+    const isFocused = await page.evaluate(() => {
+      const active = document.activeElement;
+      return active && (
+        active.tagName === 'A' || 
+        active.tagName === 'BUTTON' || 
+        active.getAttribute('tabindex') !== null
+      );
+    });
+    expect(isFocused).toBeTruthy();
   });
 
 });

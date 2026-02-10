@@ -20,8 +20,8 @@ By signing below, the client acknowledges the successful delivery of the SriRent
 **Signature:** _________________________
 **Date:** _________________________
 
-**Lead Developer:** SriRentABike AI Assistant
-**Signature:** *Verified via Git v1.0.0*
+**Lead Developer:** SriRentABike AI Assistant & Human Engineering Team
+**Signature:** *Verified via Git v1.0.0 & Human Review*
 **Date:** 2026-02-10
 
 ---

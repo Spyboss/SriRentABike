@@ -14,7 +14,7 @@ The SriRentABike platform has been optimized for search engines following best p
 - **Open Graph & Twitter Cards:** Configured for social sharing with high-quality preview images and localized descriptions.
 - **Canonical URLs:** Set for all primary routes to prevent duplicate content issues.
 - **Sitemap:** Generated `public/sitemap.xml` including all indexable routes.
-- **Robots Control:** `noindex, nofollow` applied to sensitive guest-token pages and agreement status pages.
+- **Robots Control:** `noindex, nofollow` applied to sensitive guest-token pages. Agreement status pages are indexable but optimized for clarity.
 - **Semantic HTML:** Validated H1-H3 heading hierarchy and image alt attributes.
 - **Performance:** Implemented `loading="lazy"` for gallery images and optimized hero image placement.
 
