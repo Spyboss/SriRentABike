@@ -31,14 +31,10 @@ export const createAgreementSchema = Joi.object({
 export const updateAgreementSchema = Joi.object({
   bike_id: Joi.string().uuid().optional(),
   start_date: Joi.date().iso().optional(),
-  end_date: Joi.date().iso()
-    .when('start_date', {
-      is: Joi.exist(),
-      then: Joi.date().min(Joi.ref('start_date')),
-      otherwise: Joi.date().optional()
-    })
-    .optional(),
+  end_date: Joi.date().iso().min(Joi.ref('start_date')).optional(),
   daily_rate: Joi.number().min(0).optional(),
   deposit: Joi.number().min(0).optional(),
   status: Joi.string().valid('pending', 'active', 'completed', 'cancelled').optional(),
+}).messages({
+  'date.min': '"end_date" must be greater than or equal to "start_date" when both are provided'
 });
