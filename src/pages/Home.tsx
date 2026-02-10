@@ -30,6 +30,16 @@ export default function Home() {
         <title>SriRentABike - Bike Rentals in Tangalle, Sri Lanka</title>
         <meta name="description" content="Authentic Bike Rentals in Tangalle. Explore the South Coast of Sri Lanka on your own terms with our reliable scooters and motorbikes. 24/7 support and friendly service." />
         <link rel="canonical" href="https://www.srirentabike.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.srirentabike.com/" />
+        <meta property="og:title" content="SriRentABike - Authentic Bike Rentals in Tangalle" />
+        <meta property="og:description" content="Explore Tangalle and the South Coast on your own terms. Scooters, motorbikes, and hassle-free transport for the perfect Sri Lankan adventure." />
+        <meta property="og:image" content="https://res.cloudinary.com/dthx4fxte/image/upload/v1766273824/WhatsApp_Image_2025-12-11_at_17.56.49_d4a002b8_shfm0d.jpg" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://www.srirentabike.com/" />
+        <meta property="twitter:title" content="SriRentABike - Authentic Bike Rentals in Tangalle" />
+        <meta property="twitter:description" content="Explore Tangalle and the South Coast on your own terms. Scooters, motorbikes, and hassle-free transport for the perfect Sri Lankan adventure." />
+        <meta property="twitter:image" content="https://res.cloudinary.com/dthx4fxte/image/upload/v1766273824/WhatsApp_Image_2025-12-11_at_17.56.49_d4a002b8_shfm0d.jpg" />
       </Helmet>
 
       <Navbar />

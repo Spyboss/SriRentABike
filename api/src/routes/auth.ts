@@ -4,17 +4,15 @@ import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { supabase, config } from '../config/database';
 import { AdminLoginRequest, AuthResponse } from '../models/types';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
+import { validateRequest } from '../middleware/validate';
+import { loginSchema } from '../schemas';
 
 const router = express.Router();
 
 // Admin login
-router.post('/admin/login', async (req: express.Request, res: express.Response) => {
+router.post('/admin/login', validateRequest(loginSchema), async (req: express.Request, res: express.Response) => {
   try {
     const { email, password }: AdminLoginRequest = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
 
     // Get user from database
     const { data: user, error } = await supabase
@@ -62,6 +60,9 @@ router.get('/me', authenticateToken, (req: AuthRequest, res: express.Response) =
 
 // Create initial admin user (for development)
 router.post('/setup-admin', async (req: express.Request, res: express.Response) => {
+  if (config.nodeEnv === 'production') {
+    return res.status(403).json({ error: 'Not available in production' });
+  }
   try {
     const { email, password } = req.body;
 

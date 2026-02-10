@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGuestFormStore } from '../stores/guest-form';
 import { SignaturePad } from '../components/SignaturePad';
@@ -157,7 +158,11 @@ export const GuestForm: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-50 py-12 md:py-24 px-4">
-      <div className="max-w-3xl mx-auto">
+      <Helmet>
+        <title>Complete Your Rental Agreement - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <div className="flex justify-center mb-8">
             <Logo width={180} />

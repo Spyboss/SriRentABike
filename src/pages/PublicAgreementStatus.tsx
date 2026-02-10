@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { agreementsAPI } from '@/services/api';
 import { AlertCircle, CheckCircle, FileDown, Loader2, Home, ExternalLink } from 'lucide-react';
@@ -79,6 +80,10 @@ export default function PublicAgreementStatus() {
 
   return (
     <div className="min-h-screen bg-stone-50 py-12 md:py-24 px-4">
+      <Helmet>
+        <title>Agreement Status - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-xl mx-auto">
         <div className="text-center mb-12">
           <div className="flex justify-center mb-8">

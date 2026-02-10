@@ -2,12 +2,14 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../config/database';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
+import { validateRequest } from '../middleware/validate';
+import { createAgreementSchema, updateAgreementSchema } from '../schemas';
 import { CreateAgreementRequest, UpdateAgreementRequest } from '../models/types';
 
 const router = express.Router();
 
 // Create new agreement (guest)
-router.post('/', async (req: express.Request, res: express.Response) => {
+router.post('/', validateRequest(createAgreementSchema), async (req: express.Request, res: express.Response) => {
   try {
     const { 
       tourist_data, 
@@ -20,18 +22,6 @@ router.post('/', async (req: express.Request, res: express.Response) => {
       requested_model, 
       outside_area 
     }: CreateAgreementRequest = req.body;
-
-    // Validate required fields
-    if (!tourist_data || !signature) {
-      return res.status(400).json({ error: 'Tourist data and signature are required' });
-    }
-
-    const requiredFields = ['first_name', 'last_name', 'passport_no', 'nationality', 'home_address', 'phone_number', 'email'];
-    for (const field of requiredFields) {
-      if (!tourist_data[field as keyof typeof tourist_data]) {
-        return res.status(400).json({ error: `${field} is required` });
-      }
-    }
 
     // Upload signature to Supabase Storage
     const signatureBuffer = Buffer.from(signature.split(',')[1], 'base64');
@@ -264,15 +254,10 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 });
 
 // Update agreement (admin)
-router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
+router.put('/:id', authenticateToken, requireAdmin, validateRequest(updateAgreementSchema), async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
     const updates: UpdateAgreementRequest = req.body;
-
-    // Validate status if provided
-    if (updates.status && !['pending', 'signed', 'completed'].includes(updates.status)) {
-      return res.status(400).json({ error: 'Invalid status' });
-    }
 
     // If assigning a bike, update bike availability
     if (updates.bike_id) {

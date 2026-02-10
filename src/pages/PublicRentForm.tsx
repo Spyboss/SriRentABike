@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { agreementsAPI } from '@/services/api';
 import { SignaturePad } from '@/components/SignaturePad';
@@ -228,6 +229,11 @@ export default function PublicRentForm() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
+      <Helmet>
+        <title>Rent a Bike in Tangalle - SriRentABike Booking</title>
+        <meta name="description" content="Book your scooter or motorbike in Tangalle, Sri Lanka. Easy online booking, transparent pricing, and 24/7 support." />
+        <link rel="canonical" href="https://www.srirentabike.com/rent" />
+      </Helmet>
       <Navbar />
       
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 pt-24 md:pt-32 pb-12">
