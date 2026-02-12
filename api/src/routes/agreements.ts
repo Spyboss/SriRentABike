@@ -5,6 +5,8 @@ import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth
 import { validateRequest } from '../middleware/validate';
 import { createAgreementSchema, updateAgreementSchema } from '../schemas';
 import { CreateAgreementRequest, UpdateAgreementRequest } from '../models/types';
+import { NotificationService } from '../services/notifications/whatsapp';
+import { TwilioNotificationService } from '../services/notifications/twilio';
 
 const router = express.Router();
 
@@ -99,6 +101,22 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
     if (guestLinkError) {
       throw guestLinkError;
     }
+
+    // Trigger notification (background)
+    // Primary: Twilio, Backup: Meta Cloud API
+    (async () => {
+      try {
+        console.log('Attempting primary notification via Twilio...');
+        await TwilioNotificationService.sendBookingAlert(req.body, agreementNo);
+      } catch (twilioError) {
+        console.error('Twilio notification failed, attempting fallback to Meta Cloud API...', twilioError);
+        try {
+          await NotificationService.sendBookingAlert(req.body, agreementNo);
+        } catch (metaError) {
+          console.error('All notification methods failed:', metaError);
+        }
+      }
+    })();
 
     res.json({
       agreement_id: agreement.id,
