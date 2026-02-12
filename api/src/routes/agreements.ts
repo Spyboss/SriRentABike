@@ -127,7 +127,12 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
 
   } catch (error) {
     console.error('Create agreement error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const errorDetails = error && typeof error === 'object' && 'details' in error ? error.details : undefined;
+    res.status(500).json({ 
+      error: errorMessage,
+      details: errorDetails
+    });
   }
 });
 
