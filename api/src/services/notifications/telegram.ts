@@ -96,7 +96,7 @@ export class TelegramNotificationService {
 
         // Build lines — each value is escaped for MarkdownV2
         const lines = [
-            `🚲 *New Booking Alert\\!*`,
+            `� *New Booking Alert\\!*`,
             ``,
             `👤 *Customer:* ${esc(customerName)}`,
             `📧 *Email:* ${esc(tourist_data.email)}`,
