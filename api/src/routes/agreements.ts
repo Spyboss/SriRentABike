@@ -5,30 +5,29 @@ import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth
 import { validateRequest } from '../middleware/validate';
 import { createAgreementSchema, updateAgreementSchema } from '../schemas';
 import { CreateAgreementRequest, UpdateAgreementRequest } from '../models/types';
-import { NotificationService } from '../services/notifications/whatsapp';
-import { TwilioNotificationService } from '../services/notifications/twilio';
+import { TelegramNotificationService } from '../services/notifications/telegram';
 
 const router = express.Router();
 
 // Create new agreement (guest)
 router.post('/', validateRequest(createAgreementSchema), async (req: express.Request, res: express.Response) => {
   try {
-    const { 
-      tourist_data, 
-      signature, 
-      start_date, 
-      end_date, 
-      daily_rate, 
-      total_amount, 
-      deposit, 
-      requested_model, 
-      outside_area 
+    const {
+      tourist_data,
+      signature,
+      start_date,
+      end_date,
+      daily_rate,
+      total_amount,
+      deposit,
+      requested_model,
+      outside_area
     }: CreateAgreementRequest = req.body;
 
     // Upload signature to Supabase Storage
     const signatureBuffer = Buffer.from(signature.split(',')[1], 'base64');
     const signatureFileName = `signatures/${uuidv4()}.png`;
-    
+
     const { error: uploadError } = await supabase.storage
       .from('rental-agreements')
       .upload(signatureFileName, signatureBuffer, {
@@ -102,19 +101,12 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
       throw guestLinkError;
     }
 
-    // Trigger notification (background)
-    // Primary: Twilio, Backup: Meta Cloud API
+    // Trigger Telegram notification (background — does not block HTTP response)
     (async () => {
       try {
-        console.log('Attempting primary notification via Twilio...');
-        await TwilioNotificationService.sendBookingAlert(req.body, agreementNo);
-      } catch (twilioError) {
-        console.error('Twilio notification failed, attempting fallback to Meta Cloud API...', twilioError);
-        try {
-          await NotificationService.sendBookingAlert(req.body, agreementNo);
-        } catch (metaError) {
-          console.error('All notification methods failed:', metaError);
-        }
+        await TelegramNotificationService.sendBookingAlert(req.body, agreementNo);
+      } catch (error) {
+        console.error('Telegram notification failed after all retries:', error);
       }
     })();
 
@@ -129,7 +121,7 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
     console.error('Create agreement error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     const errorDetails = error && typeof error === 'object' && 'details' in error ? error.details : undefined;
-    res.status(500).json({ 
+    res.status(500).json({
       error: errorMessage,
       details: errorDetails
     });
@@ -153,7 +145,7 @@ router.get('/public/:reference', async (req: express.Request, res: express.Respo
       `)
       .eq('agreement_no', reference)
       .single();
-    
+
     if (error || !agreement) {
       return res.status(404).json({ error: 'Agreement not found' });
     }
@@ -180,7 +172,7 @@ router.get('/public/:reference', async (req: express.Request, res: express.Respo
 router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { page = 1, limit = 20, search, status, start_date, end_date } = req.query;
-    
+
     let query = supabase
       .from('agreements')
       .select(`

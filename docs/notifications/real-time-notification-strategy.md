@@ -1,110 +1,77 @@
 # Real-Time Notification System Strategy
 
-This document outlines the research, technical requirements, and implementation strategy for alerting the SriRentABike client instantly when a new booking is completed on `https://www.srirentabike.com/rent`.
-
-## 1. Overview
-The goal is to move away from traditional email notifications and implement instant messaging alerts (WhatsApp/SMS) to ensure the client can respond to rental requests immediately, especially while on the move in Tangalle.
+Instant alerts via **Telegram Bot API** when a new booking is completed on `srirentabike.com/rent`.
 
 ---
 
-## 2. Comparison of Viable Solutions
+## Architecture
 
-### Solution 1: Meta WhatsApp Cloud API (Recommended)
-Direct integration with Meta's infrastructure.
-
-- **Pros:**
-  - Lowest per-message cost (only Meta's official utility rates).
-  - Rich notifications (can include links to the signed agreement PDF).
-  - Highly reliable and scalable.
-- **Cons:**
-  - Requires Meta Business Verification.
-  - Complex initial setup (Template approvals, Webhooks).
-- **Estimated Cost:** ~$0.01 - $0.04 per utility message (varies by market).
-- **Technical Requirement:** Node.js `axios` or Meta's SDK, Webhook for status tracking.
-
-### Solution 2: Twilio WhatsApp Business API
-Using Twilio as a Business Solution Provider (BSP).
-
-- **Pros:**
-  - Faster setup than Meta Direct.
-  - Excellent documentation and developer tools.
-  - Unified platform for SMS and WhatsApp.
-- **Cons:**
-  - Higher cost ($0.005 markup per message + Meta fees).
-  - Subject to Twilio's platform stability.
-- **Estimated Cost:** Meta Rate + $0.005 per message.
-- **Technical Requirement:** `twilio` npm package, API Key, Account SID.
-
-### Solution 3: Local SMS Gateway (e.g., Notify.lk / Dialog ESMS)
-Direct SMS to the client's phone via Sri Lankan providers.
-
-- **Pros:**
-  - Works without mobile data/internet on the receiver's end.
-  - Lowest cost for local (Sri Lankan) numbers.
-  - Simple API (REST/HTTP).
-- **Cons:**
-  - No rich media (text only).
-  - No "read" receipts.
-  - Limited international scalability.
-- **Estimated Cost:** ~LKR 0.50 - 1.50 per SMS.
-- **Technical Requirement:** Simple HTTP POST request to the provider's endpoint.
-
----
-
-## 3. Recommended Implementation Strategy
-
-We have implemented a **Hybrid Approach** with Twilio as the primary provider:
-1. **Primary:** Twilio WhatsApp API for quick delivery and ease of management.
-2. **Backup/Fallback:** Meta WhatsApp Cloud API as a secondary channel if Twilio fails.
-3. **Tertiary Fallback:** Simple console logging of errors for all failed delivery attempts.
-
-### Implementation Steps
-1. **Account Setup:**
-   - Register on [Meta for Developers](https://developers.facebook.com/).
-   - Set up a WhatsApp Business Account (WABA).
-   - Verify Business identity.
-2. **Template Creation:**
-   - Create a "Utility" template: 
-     *"New Booking Alert! 🚲\nCustomer: {{1}}\nModel: {{2}}\nDates: {{3}} to {{4}}\nView details: {{5}}"*
-3. **Backend Integration:**
-   - Add `WHATSAPP_API_KEY` and `WHATSAPP_PHONE_ID` to `.env`.
-   - Modify `api/src/routes/agreements.ts` to trigger the API call after successful DB insertion.
-4. **Security & Compliance:**
-   - Use environment variables for all API keys.
-   - Implement rate limiting to prevent spam.
-   - Ensure tourist data is transmitted over HTTPS only.
-
----
-
-## 4. Technical Requirements & Credentials
-
-| Provider | Required Credentials | API Endpoint |
-|----------|----------------------|--------------|
-| **Meta** | Access Token, Phone Number ID, WABA ID | `https://graph.facebook.com/v21.0/{phone-id}/messages` |
-| **Twilio** | Account SID, Auth Token, Twilio Phone Number | `https://api.twilio.com/2010-04-01/...` |
-| **Notify.lk**| API Key, User ID, Sender ID | `https://app.notify.lk/api/v1/send` |
-
----
-
-## 5. Testing & Fallback Procedures
-
-### Testing Plan
-1. **Sandbox Testing:** Use Meta/Twilio sandbox numbers to verify message formatting.
-2. **End-to-End Test:** Submit a dummy booking on `srirentabike.com/rent` and verify the alert on the client's phone.
-3. **Template Validation:** Ensure all dynamic variables (customer name, dates) are mapped correctly.
-
-### Fallback Mechanism
-```typescript
-try {
-  await sendWhatsAppNotification(bookingData);
-} catch (error) {
-  console.error("WhatsApp failed, triggering SMS fallback...");
-  await sendSMSNotification(bookingData);
-}
+```
+Customer submits form → API creates agreement in Supabase → TelegramNotificationService
+  → Telegram Bot API (sendMessage) → Admin Telegram Channel
 ```
 
+Notifications are fired in the background (async IIFE) so the HTTP response to the customer is never blocked.
+
 ---
 
-## 6. Compliance
-- **GDPR/Data Privacy:** Do not include full passport numbers in the notification. Use a link to the secure admin dashboard instead.
-- **WhatsApp Policy:** Messages must be transactional (Utility category) and not promotional to avoid account suspension.
+## Why Telegram?
+
+| | Telegram Bot API | Twilio WhatsApp | Meta Cloud API |
+|---|---|---|---|
+| **Cost** | Free | ~$0.005+ per msg | ~$0.01-0.04 per msg |
+| **Setup** | 2 min via @BotFather | Business verification | Meta Business verification |
+| **Rich formatting** | MarkdownV2, emojis | Limited templates | Template approval required |
+| **Rate limits** | 30 msg/sec per channel | Account-level | Tiered |
+| **Dependencies** | None (Node `https`) | `twilio` npm package | `axios` or raw HTTP |
+
+---
+
+## Service Features
+
+1. **Retry with exponential backoff** — up to 3 attempts (1s → 2s → 4s)
+2. **Rate limiting** — Sliding-window, 20 msg/min (configurable)
+3. **MarkdownV2 formatting** with emojis for readable alerts
+4. **Webhook secret validation** for future webhook integration
+5. **Graceful degradation** — missing config skips notifications with a warning
+
+---
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | ✅ | — | Token from @BotFather |
+| `TELEGRAM_CHAT_ID` | ✅ | — | Channel/group chat ID |
+| `TELEGRAM_WEBHOOK_SECRET` | ❌ | — | For webhook validation |
+| `TELEGRAM_NOTIFICATIONS_ENABLED` | ❌ | `true` | Kill switch |
+| `TELEGRAM_MAX_RETRIES` | ❌ | `3` | Retry attempts |
+| `TELEGRAM_RATE_LIMIT_PER_MIN` | ❌ | `20` | Max msgs per minute |
+
+---
+
+## Setup Guide
+
+1. Open Telegram → message [@BotFather](https://t.me/BotFather) → `/newbot`
+2. Copy the bot token → set `TELEGRAM_BOT_TOKEN` in `.env`
+3. Create a channel or group → add the bot as admin
+4. Get the chat ID (forward a message to [@userinfobot](https://t.me/userinfobot) or use the Telegram API `getUpdates` endpoint)
+5. Set `TELEGRAM_CHAT_ID` in `.env`
+
+---
+
+## Testing
+
+```bash
+cd api
+npx ts-node src/services/notifications/test-telegram.ts
+```
+
+This sends a dummy booking alert and measures delivery time.
+
+---
+
+## Compliance
+
+- **GDPR/Data Privacy:** Full passport numbers are NOT included in the notification. Messages link to the admin dashboard for sensitive data.
+- **Telegram ToS:** All messages are transactional notifications, not promotional.
