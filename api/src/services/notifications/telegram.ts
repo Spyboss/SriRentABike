@@ -94,9 +94,18 @@ export class TelegramNotificationService {
         const { tourist_data, requested_model, start_date, end_date, daily_rate, total_amount, deposit, outside_area } = data;
         const customerName = `${tourist_data.first_name} ${tourist_data.last_name}`;
 
+        // Format dates to clean YYYY-MM-DD (handles Date objects and ISO strings)
+        const fmtDate = (d: unknown): string => {
+            try {
+                return new Date(d as string | number).toISOString().split('T')[0];
+            } catch {
+                return String(d ?? '');
+            }
+        };
+
         // Build lines — each value is escaped for MarkdownV2
         const lines = [
-            `� *New Booking Alert\\!*`,
+            `\uD83D\uDEF5 *New Booking Alert\\!*`,
             ``,
             `👤 *Customer:* ${esc(customerName)}`,
             `📧 *Email:* ${esc(tourist_data.email)}`,
@@ -110,7 +119,7 @@ export class TelegramNotificationService {
         lines.push(
             ``,
             `🏍️ *Bike Model:* ${esc(requested_model || 'Standard Bike')}`,
-            `📅 *Dates:* ${esc(start_date)} → ${esc(end_date)}`,
+            `📅 *Dates:* ${esc(fmtDate(start_date))} → ${esc(fmtDate(end_date))}`,
             `💰 *Daily Rate:* ${esc(String(daily_rate))}`,
             `💵 *Total:* ${esc(String(total_amount))}`,
             `🔒 *Deposit:* ${esc(String(deposit))}`,
