@@ -202,6 +202,6 @@ export class TelegramNotificationService {
 // ── MarkdownV2 escape helper ────────────────────────────────────────────
 // Telegram MarkdownV2 requires escaping these characters:
 // _ * [ ] ( ) ~ ` > # + - = | { } . !
-function esc(text: string): string {
-    return text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+function esc(text: unknown): string {
+    return String(text ?? '').replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
 }
