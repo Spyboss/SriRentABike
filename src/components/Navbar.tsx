@@ -34,11 +34,11 @@ export const Navbar: React.FC<NavbarProps> = ({ isAdmin, userEmail, onLogout }) 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           <div 
-            className="flex-shrink-0 flex items-center gap-2 cursor-pointer"
+            className="flex-shrink-0 flex items-center gap-3 cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <Logo width={40} className="md:w-12" />
-            <span className="text-lg md:text-xl font-bold text-stone-900 tracking-tight">SriRentABike</span>
+            <Logo width={56} className="md:w-16" />
+            <span className="text-base md:text-lg font-bold text-stone-900 tracking-[0.16em]">SRI RENT A BIKE</span>
           </div>
 
           {/* Desktop Navigation */}
