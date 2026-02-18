@@ -9,6 +9,7 @@ import PublicAgreementStatus from "@/pages/PublicAgreementStatus";
 import BikeManagement from "@/pages/BikeManagement";
 
 import PricingManagement from "@/pages/PricingManagement";
+import NotFound from "@/pages/NotFound";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/admin/bikes" element={<BikeManagement />} />
         <Route path="/admin/pricing" element={<PricingManagement />} />
         <Route path="/rent/:token" element={<GuestForm />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

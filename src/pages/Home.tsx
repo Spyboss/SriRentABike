@@ -37,9 +37,29 @@ export default function Home() {
         <meta name="twitter:image" content="https://res.cloudinary.com/dthx4fxte/image/upload/v1766273824/WhatsApp_Image_2025-12-11_at_17.56.49_d4a002b8_shfm0d.jpg" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.srirentabike.com/" />
+        <meta property="og:site_name" content="Sri Rent a Bike Sri Lanka" />
+        <meta property="og:locale" content="en_US" />
         <meta property="og:title" content="SriRentABike - Authentic Bike Rentals in Tangalle" />
         <meta property="og:description" content="Explore Tangalle and the South Coast on your own terms. Scooters, motorbikes, and hassle-free transport for the perfect Sri Lankan adventure." />
         <meta property="og:image" content="https://res.cloudinary.com/dthx4fxte/image/upload/v1766273824/WhatsApp_Image_2025-12-11_at_17.56.49_d4a002b8_shfm0d.jpg" />
+        <link rel="alternate" hreflang="en" href="https://www.srirentabike.com/" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'LocalBusiness',
+            name: 'SriRentABike',
+            image: 'https://res.cloudinary.com/dthx4fxte/image/upload/v1766273824/WhatsApp_Image_2025-12-11_at_17.56.49_d4a002b8_shfm0d.jpg',
+            url: 'https://www.srirentabike.com/',
+            telephone: '+94704984008',
+            priceRange: '$$',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Ulu Wewa Road, Polommaruwa',
+              addressLocality: 'Tangalle',
+              addressCountry: 'LK',
+            },
+          })}
+        </script>
       </Helmet>
 
       <Navbar />
@@ -50,6 +70,8 @@ export default function Home() {
           <img
             src="/hero.jpg"
             alt="Hero Background"
+            width={1920}
+            height={1080}
             className="w-full h-full object-cover object-top"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 via-stone-900/40 to-transparent" />
@@ -152,6 +174,8 @@ export default function Home() {
                 <img
                   src={src}
                   alt={`Happy customer ${index + 1}`}
+                  width={800}
+                  height={600}
                   className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
@@ -173,7 +197,14 @@ export default function Home() {
       {/* CTA Section */}
       <div className="py-32 bg-stone-900 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20">
-            <img src="/hero.jpg" className="w-full h-full object-cover grayscale" alt="texture" />
+            <img
+              src="/hero.jpg"
+              className="w-full h-full object-cover grayscale"
+              alt="texture"
+              width={1920}
+              height={1080}
+              loading="lazy"
+            />
         </div>
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight">

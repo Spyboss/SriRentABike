@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
@@ -23,6 +24,10 @@ export const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+      <Helmet>
+        <title>Admin Login - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <div className="max-w-md w-full">
         <div className="flex flex-col items-center mb-10">
           <Logo width={180} className="mb-8" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { rateAPI } from '@/services/api';
 import { Navbar } from '@/components/Navbar';
@@ -159,6 +160,10 @@ export default function PricingManagement() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
+      <Helmet>
+        <title>Pricing Management - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
 
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 pt-24 md:pt-32 pb-12">

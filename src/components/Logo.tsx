@@ -18,6 +18,8 @@ export const Logo: React.FC<LogoProps> = ({
         src={BRANDING.logo.url}
         alt={BRANDING.logo.alt}
         className="object-contain"
+        width={typeof width === 'number' ? width : undefined}
+        height={typeof height === 'number' ? height : undefined}
         style={{
           width: width || undefined,
           height: height || undefined,

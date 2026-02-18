@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useBikesStore } from '@/stores/bikes';
@@ -113,6 +114,10 @@ export default function BikeManagement() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
+      <Helmet>
+        <title>Bike Management - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar />
 
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 pt-24 md:pt-32 pb-12">

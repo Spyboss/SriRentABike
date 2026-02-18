@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { agreementsAPI, pdfAPI } from '../services/api';
@@ -299,6 +300,10 @@ export const AgreementDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-50 pb-12">
+      <Helmet>
+        <title>Agreement Details - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar isAdmin userEmail={user.email} onLogout={logout} />
 
       <div className="max-w-4xl mx-auto px-4 pt-24 md:pt-32">
@@ -508,6 +513,8 @@ export const AgreementDetail: React.FC = () => {
                 <img 
                   src={agreement.signature_url} 
                   alt="Customer Signature" 
+                  width={640}
+                  height={200}
                   className="max-h-32 w-auto mx-auto grayscale contrast-125"
                 />
               </div>

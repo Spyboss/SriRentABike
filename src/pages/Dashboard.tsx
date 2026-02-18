@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
 import { useAgreementsStore } from '../stores/agreements';
@@ -133,6 +134,10 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <Helmet>
+        <title>Dashboard - SriRentABike</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <Navbar isAdmin userEmail={user.email} onLogout={handleLogout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-32 pb-12">

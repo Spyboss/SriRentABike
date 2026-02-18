@@ -233,6 +233,8 @@ export default function PublicRentForm() {
         <title>Rent a Bike in Tangalle - SriRentABike Booking</title>
         <meta name="description" content="Book your scooter or motorbike in Tangalle, Sri Lanka. Easy online booking, transparent pricing, and 24/7 support." />
         <link rel="canonical" href="https://www.srirentabike.com/rent" />
+        <meta property="og:locale" content="en_US" />
+        <link rel="alternate" hreflang="en" href="https://www.srirentabike.com/rent" />
       </Helmet>
       <Navbar />
       

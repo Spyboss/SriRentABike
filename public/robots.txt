@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /dashboard
+Disallow: /admin/
+Disallow: /agreements/
+Disallow: /agreement/
+Sitemap: https://www.srirentabike.com/sitemap.xml
