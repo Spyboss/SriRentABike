@@ -35,7 +35,7 @@ export const Login: React.FC = () => {
             <Lock className="w-3 h-3" /> Secure Access
           </div>
           <h2 className="text-3xl font-black text-stone-900 tracking-tight">Admin Login</h2>
-          <p className="mt-2 text-stone-500 font-medium">SriRentABike Management</p>
+          <p className="mt-2 text-stone-500 font-medium">Sri Rent A Bike Management</p>
         </div>
         
         <div className="bg-white rounded-[2rem] shadow-xl shadow-stone-200/50 border border-stone-100 p-8 sm:p-10">
@@ -109,7 +109,7 @@ export const Login: React.FC = () => {
         </div>
         
         <p className="mt-10 text-center text-stone-400 text-sm font-medium">
-          &copy; {new Date().getFullYear()} SriRentABike Tangalle. All rights reserved.
+          &copy; {new Date().getFullYear()} Sri Rent A Bike Tangalle. All rights reserved.
         </p>
       </div>
     </div>

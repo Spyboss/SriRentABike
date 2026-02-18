@@ -428,7 +428,7 @@ export default function PublicRentForm() {
         </form>
 
         <footer className="mt-12 text-center">
-          <p className="text-stone-400 text-sm">SriRentABike Tangalle • Polommaruwa • +94 77 123 4567</p>
+          <p className="text-stone-400 text-sm">Sri Rent A Bike Tangalle • Polommaruwa • +94 77 123 4567</p>
         </footer>
       </div>
     </div>

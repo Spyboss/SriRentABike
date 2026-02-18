@@ -112,7 +112,7 @@ export default function Home() {
       <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <h2 className="text-3xl md:text-4xl font-bold text-stone-900 mb-6">Why Choose SriRentABike?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-stone-900 mb-6">Why Choose Sri Rent A Bike?</h2>
             <p className="text-lg text-stone-600 max-w-2xl mx-auto leading-relaxed">
               We are a local family business in Tangalle, dedicated to helping you experience the real Sri Lanka. No hidden fees, just friendly service and reliable rides.
             </p>
@@ -234,7 +234,7 @@ export default function Home() {
                  </div>
               </div>
               <p className="text-stone-500 max-w-sm mb-6">
-                SriRentABike is your trusted partner for exploring Tangalle. We provide quality bikes, scooters, and taxi services with 24/7 support.
+                Sri Rent A Bike is your trusted partner for exploring Tangalle. We provide quality bikes, scooters, and taxi services with 24/7 support.
               </p>
               <div className="flex space-x-4">
                 <a 
@@ -295,7 +295,7 @@ export default function Home() {
             </div>
           </div>
           <div className="pt-8 border-t border-stone-800 text-center text-xs text-stone-600">
-            <p>&copy; {new Date().getFullYear()} SriRentABike. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Sri Rent A Bike. All rights reserved.</p>
           </div>
         </div>
       </footer>
