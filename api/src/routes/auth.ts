@@ -64,6 +64,13 @@ router.post('/setup-admin', async (req: express.Request, res: express.Response) 
     return res.status(403).json({ error: 'Not available in production' });
   }
   try {
+    if (config.nodeEnv === 'production') {
+      return res.status(403).json({ error: 'Admin setup is disabled in production' });
+    }
+    const providedToken = req.header('x-setup-token');
+    if (config.setupAdminToken && providedToken !== config.setupAdminToken) {
+      return res.status(403).json({ error: 'Invalid setup token' });
+    }
     const { email, password } = req.body;
 
     if (!email || !password) {
