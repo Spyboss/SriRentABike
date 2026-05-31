@@ -257,4 +257,4 @@ MIT License - see LICENSE file for details
 
 ## Support
 
-For support, email support@srirentabike.com or create an issue in the repository.
+For support, create an issue in the repository.
