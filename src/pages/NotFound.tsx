@@ -10,7 +10,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Helmet>
-        <title>Page Not Found - SriRentABike</title>
+        <title>Page Not Found - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar />

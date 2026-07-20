@@ -301,7 +301,7 @@ export const AgreementDetail: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-50 pb-12">
       <Helmet>
-        <title>Agreement Details - SriRentABike</title>
+        <title>Agreement Details - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar isAdmin userEmail={user.email} onLogout={logout} />

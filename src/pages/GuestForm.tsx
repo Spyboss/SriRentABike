@@ -159,7 +159,7 @@ export const GuestForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-50 py-12 md:py-24 px-4">
       <Helmet>
-        <title>Complete Your Rental Agreement - SriRentABike</title>
+        <title>Complete Your Rental Agreement - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="max-w-4xl mx-auto">

@@ -135,7 +135,7 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-50">
       <Helmet>
-        <title>Dashboard - SriRentABike</title>
+        <title>Dashboard - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar isAdmin userEmail={user.email} onLogout={handleLogout} />

@@ -161,7 +161,7 @@ export default function PricingManagement() {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Helmet>
-        <title>Pricing Management - SriRentABike</title>
+        <title>Pricing Management - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar />

@@ -81,7 +81,7 @@ export default function PublicAgreementStatus() {
   return (
     <div className="min-h-screen bg-stone-50 py-12 md:py-24 px-4">
       <Helmet>
-        <title>Agreement Status - SriRentABike</title>
+        <title>Agreement Status - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="max-w-xl mx-auto">

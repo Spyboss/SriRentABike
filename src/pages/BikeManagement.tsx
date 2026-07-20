@@ -115,7 +115,7 @@ export default function BikeManagement() {
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col">
       <Helmet>
-        <title>Bike Management - SriRentABike</title>
+        <title>Bike Management - Sri Rent A Bike</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <Navbar />
