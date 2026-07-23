@@ -111,11 +111,3 @@ router.post('/setup-admin', async (req: express.Request, res: express.Response) 
 
 export default router;
 
-// Debug endpoint to check Supabase config
-router.get('/debug-env', (req, res) => {
-  res.json({
-    supabaseUrl: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.substring(0, 50) + '...' : 'NOT SET',
-    nodeEnv: config.nodeEnv,
-    jwtSecret: config.jwtSecret === 'default-secret-change-this' ? 'DEFAULT' : 'CUSTOM',
-  });
-});
