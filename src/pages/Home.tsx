@@ -73,7 +73,7 @@ export default function Home() {
         />
         <link
           rel="alternate"
-          hreflang="en"
+          hrefLang="en"
           href="https://www.srirentabike.com/"
         />
         <script type="application/ld+json">

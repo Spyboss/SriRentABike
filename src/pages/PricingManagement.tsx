@@ -113,7 +113,7 @@ export default function PricingManagement() {
     }));
   };
 
-  const handleModelChange = (index: number, field: keyof BikeModel, value: string | number) => {
+  const handleModelChange = (index: number, field: keyof BikeModel, value: string | number | undefined) => {
     setConfig(prev => {
       const newModels = [...prev.models];
       newModels[index] = {
@@ -317,6 +317,20 @@ export default function PricingManagement() {
                       </div>
                     </div>
                     
+                    <div className="md:w-44">
+                      <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-1 mb-2 block">Max Daily Rate</label>
+                      <div className="relative group/input">
+                        <input
+                          type="number"
+                          value={model.dailyRateMaxLKR ?? ''}
+                          placeholder="Optional"
+                          onChange={(e) => handleModelChange(index, 'dailyRateMaxLKR', e.target.value === '' ? undefined : Number(e.target.value))}
+                          className="w-full bg-white px-5 h-14 rounded-2xl border border-stone-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-stone-900 font-black text-lg transition-all"
+                        />
+                        <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-stone-300 group-focus-within/input:text-orange-400">LKR</span>
+                      </div>
+                    </div>
+
                     <div className="md:w-44">
                       <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-1 mb-2 block">Monthly Rate</label>
                       <div className="relative group/input">

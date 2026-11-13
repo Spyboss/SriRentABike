@@ -117,7 +117,9 @@ export default function PublicRentForm() {
     let appliedRate = selectedModel.dailyRateLKR;
 
     // Monthly Rate Logic
-    if (effectiveDays >= 30) {
+    // Only use the monthly package when one is configured (monthlyRateLKR > 0).
+    // A 0 rate means "no package": fall back to daily pricing instead of quoting 0.
+    if (effectiveDays >= 30 && selectedModel.monthlyRateLKR > 0) {
       // Pro-rate monthly rate
       appliedRate = selectedModel.monthlyRateLKR / 30;
       totalLKR = appliedRate * effectiveDays;
@@ -303,7 +305,7 @@ export default function PublicRentForm() {
         />
         <link
           rel="alternate"
-          hreflang="en"
+          hrefLang="en"
           href="https://www.srirentabike.com/rent"
         />
         <script type="application/ld+json">
@@ -363,7 +365,10 @@ export default function PublicRentForm() {
                   >
                     {bikeModels.map((model) => (
                       <option key={model.id} value={model.id}>
-                        {model.name} - {displayAmount(model.dailyRateLKR)}/day
+                        {model.name} -{" "}
+                        {model.dailyRateMaxLKR
+                          ? `${displayAmount(model.dailyRateLKR)} - ${displayAmount(model.dailyRateMaxLKR)}/day`
+                          : `${displayAmount(model.dailyRateLKR)}/day`}
                       </option>
                     ))}
                   </select>

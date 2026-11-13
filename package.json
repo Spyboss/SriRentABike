@@ -11,7 +11,8 @@
     "build:backend": "cd api && npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check": "tsc -b --noEmit"
+    "check": "tsc -b --noEmit",
+    "verify:pricing": "node --experimental-strip-types scripts/verify-pricing.mjs && node --experimental-strip-types scripts/verify-pricing-defaults.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",

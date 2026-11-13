@@ -1,13 +1,23 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGuestFormStore } from '../stores/guest-form';
 import { SignaturePad } from '../components/SignaturePad';
 import { agreementsAPI } from '../services/api';
-import { CheckCircle, AlertCircle, Loader2, Lock, Calendar, CreditCard, User, Mail, MapPin, Building2, Home } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, Calendar, CreditCard, User, Mail, MapPin, Building2, Home } from 'lucide-react';
 import { rateAPI } from '@/services/api';
+import { BIKE_MODELS, PRICING_RULES, BikeModel } from '@/config/bike-rates';
 import { Logo } from '../components/Logo';
 import { FormField } from '@/components/FormField';
+
+// The agreement row the guest link points at. Used to prefill the form so the
+// guest sees exactly what they were quoted on /rent.
+interface TokenAgreement {
+  start_date?: string | null;
+  end_date?: string | null;
+  requested_model?: string | null;
+  outside_area?: boolean | null;
+}
 
 export const GuestForm: React.FC = () => {
   const { token } = useParams<{ token: string }>();
@@ -21,6 +31,7 @@ export const GuestForm: React.FC = () => {
     signature,
     submitError,
     submitSuccess,
+    agreement,
     validateToken,
     updateTouristData,
     setSignature,
@@ -31,9 +42,13 @@ export const GuestForm: React.FC = () => {
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
-  const [dailyRate, setDailyRate] = useState<number>(0);
   const [deposit, setDeposit] = useState<number>(0);
-  const [rateError, setRateError] = useState<string | null>(null);
+
+  // Pricing Configuration State — same model list and rules as /rent
+  const [bikeModels, setBikeModels] = useState<BikeModel[]>(BIKE_MODELS);
+  const [pricingRules, setPricingRules] = useState(PRICING_RULES);
+  const [selectedModelId, setSelectedModelId] = useState<string>(BIKE_MODELS[0].id);
+  const [outsideArea, setOutsideArea] = useState<boolean>(false);
 
   useEffect(() => {
     if (token) {
@@ -41,29 +56,93 @@ export const GuestForm: React.FC = () => {
     }
   }, [token, validateToken]);
 
+  // Load the live pricing config; falls back to the code defaults in state.
   useEffect(() => {
-    rateAPI.get().then(r => {
-      const dr = Number(r.data?.daily_rate ?? 5000);
-      setDailyRate(dr);
+    rateAPI.getPricing().then((r) => {
+      if (r.data?.models?.length) setBikeModels(r.data.models);
+      if (r.data?.rules) setPricingRules(r.data.rules);
     }).catch(() => {
-      setRateError('Failed to load daily rate');
-      setDailyRate(5000);
+      // Keep the code defaults — /settings/pricing is unreachable.
     });
   }, []);
+
+  // Prefill from the agreement the guest link points at, so the guest sees the
+  // same dates, model and area they were quoted on /rent.
+  const prefilledRef = useRef(false);
+  useEffect(() => {
+    const agr = agreement as TokenAgreement | null;
+    if (!agr || prefilledRef.current) return;
+    prefilledRef.current = true;
+    if (agr.start_date) setStartDate(String(agr.start_date).slice(0, 10));
+    if (agr.end_date) setEndDate(String(agr.end_date).slice(0, 10));
+    if (agr.outside_area) setOutsideArea(true);
+    if (agr.requested_model) {
+      const match = bikeModels.find((m) => m.name === agr.requested_model);
+      if (match) setSelectedModelId(match.id);
+    }
+  }, [agreement, bikeModels]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     updateTouristData({ [name]: value });
   };
 
-  const calculateTotal = useCallback(() => {
-    if (!startDate || !endDate || !dailyRate) return 0;
+  const selectedModel = useMemo(
+    () => bikeModels.find((m) => m.id === selectedModelId) || bikeModels[0],
+    [selectedModelId, bikeModels],
+  );
+
+  // Same formula as /rent (src/pages/PublicRentForm.tsx): monthly package only
+  // when configured, 10% off past the long-term threshold, outside-area
+  // surcharge on top. Both paths must quote identical prices.
+  const pricing = useMemo(() => {
+    if (!startDate || !endDate) {
+      return {
+        totalLKR: 0,
+        days: 0,
+        dailyRateLKR: 0,
+        baseDailyRateLKR: selectedModel.dailyRateLKR,
+        discountApplied: false,
+      };
+    }
+
     const start = new Date(startDate);
     const end = new Date(endDate);
-    const diffTime = end.getTime() - start.getTime();
-    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-    return diffDays * dailyRate;
-  }, [startDate, endDate, dailyRate]);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const effectiveDays = Math.max(1, days);
+
+    let totalLKR = 0;
+    let appliedRate = selectedModel.dailyRateLKR;
+    let discountApplied = false;
+
+    // Monthly Rate Logic — 0 means "no package": bill daily instead of quoting 0
+    if (effectiveDays >= 30 && selectedModel.monthlyRateLKR > 0) {
+      appliedRate = selectedModel.monthlyRateLKR / 30;
+      totalLKR = appliedRate * effectiveDays;
+    } else {
+      totalLKR = effectiveDays * selectedModel.dailyRateLKR;
+
+      // Long term discount (> 3 days)
+      if (effectiveDays > pricingRules.longTermDiscountDays) {
+        totalLKR -= totalLKR * pricingRules.longTermDiscountPercentage;
+        discountApplied = true;
+      }
+    }
+
+    // Outside Area Surcharge
+    if (outsideArea) {
+      totalLKR += effectiveDays * pricingRules.outsideAreaRateLKR;
+    }
+
+    return {
+      totalLKR,
+      days: effectiveDays,
+      dailyRateLKR: appliedRate,
+      baseDailyRateLKR: selectedModel.dailyRateLKR,
+      discountApplied,
+    };
+  }, [startDate, endDate, selectedModel, outsideArea, pricingRules]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,8 +161,11 @@ export const GuestForm: React.FC = () => {
         signature: signature,
         start_date: startDate,
         end_date: endDate,
-        daily_rate: dailyRate,
-        deposit
+        daily_rate: pricing.baseDailyRateLKR, // Storing base rate (same as /rent)
+        total_amount: Math.round(pricing.totalLKR),
+        deposit,
+        requested_model: selectedModel.name,
+        outside_area: outsideArea,
       };
       
       await agreementsAPI.create(formData);
@@ -186,39 +268,80 @@ export const GuestForm: React.FC = () => {
                 label="Start Date"
                 type="date"
                 value={startDate}
-                onChange={(e: any) => setStartDate(e.target.value)}
+                onChange={(e) => setStartDate(e.target.value)}
                 icon={Calendar}
               />
               <FormField
                 label="End Date"
                 type="date"
                 value={endDate}
-                onChange={(e: any) => setEndDate(e.target.value)}
+                onChange={(e) => setEndDate(e.target.value)}
                 icon={Calendar}
               />
-              <FormField
-                label="Daily Rate"
-                type="text"
-                value={`${dailyRate}`}
-                readOnly
-                icon={CreditCard}
-                suffix="LKR"
-              />
+              <div className="space-y-2.5">
+                <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-1 block">Bike Model *</label>
+                <div className="relative">
+                  <select
+                    value={selectedModelId}
+                    onChange={(e) => setSelectedModelId(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all appearance-none text-stone-900 font-medium min-h-[56px] shadow-sm hover:border-stone-300"
+                  >
+                    {bikeModels.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} -{" "}
+                        {model.dailyRateMaxLKR
+                          ? `LKR ${model.dailyRateLKR.toLocaleString()} - LKR ${model.dailyRateMaxLKR.toLocaleString()}/day`
+                          : `LKR ${model.dailyRateLKR.toLocaleString()}/day`}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
               <FormField
                 label="Security Deposit"
                 type="number"
                 value={deposit}
-                onChange={(e: any) => setDeposit(Number(e.target.value))}
+                onChange={(e) => setDeposit(Number(e.target.value))}
                 icon={CreditCard}
                 suffix="LKR"
               />
             </div>
-            
+
+            <div className="mt-6 space-y-2.5">
+              <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-1 block">Area of Use *</label>
+              <div className="flex p-1 bg-stone-100 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setOutsideArea(false)}
+                  className={`flex-1 py-3.5 rounded-xl text-sm font-bold transition-all min-h-[48px] ${!outsideArea ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
+                >
+                  Tangalle Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOutsideArea(true)}
+                  className={`flex-1 py-3.5 rounded-xl text-sm font-bold transition-all min-h-[48px] ${outsideArea ? "bg-white text-stone-900 shadow-sm" : "text-stone-500 hover:text-stone-700"}`}
+                >
+                  Outside Tangalle (+LKR {pricingRules.outsideAreaRateLKR}/day)
+                </button>
+              </div>
+            </div>
+
             {(startDate && endDate) && (
               <div className="mt-8 p-6 bg-stone-900 rounded-3xl text-white flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                   <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest mb-1">Estimated Total Amount</p>
-                  <p className="text-3xl font-black tracking-tight">{calculateTotal().toLocaleString()} LKR</p>
+                  <p className="text-3xl font-black tracking-tight">{Math.round(pricing.totalLKR).toLocaleString()} LKR</p>
+                  <p className="text-stone-400 text-xs font-bold mt-1">
+                    {pricing.days} day{pricing.days !== 1 ? 's' : ''} @ LKR {Math.round(pricing.dailyRateLKR).toLocaleString()}/day
+                    {pricing.discountApplied ? " · incl. 10% long-stay discount" : ""}
+                    {outsideArea ? ` · incl. LKR ${pricingRules.outsideAreaRateLKR}/day outside-area fee` : ""}
+                  </p>
                 </div>
                 <div className="text-right hidden md:block">
                   <p className="text-stone-400 text-xs font-bold">Inclusive of all taxes</p>
