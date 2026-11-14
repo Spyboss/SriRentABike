@@ -33,8 +33,12 @@ export const updateAgreementSchema = Joi.object({
   start_date: Joi.date().iso().optional(),
   end_date: Joi.date().iso().min(Joi.ref('start_date')).optional(),
   daily_rate: Joi.number().min(0).optional(),
+  // The admin UI recalculates total_amount when dates or the daily rate change.
+  // validateRequest strips unknown keys, so without this it was silently dropped.
+  total_amount: Joi.number().min(0).optional(),
   deposit: Joi.number().min(0).optional(),
-  status: Joi.string().valid('pending', 'active', 'completed', 'cancelled').optional(),
+  // Must match the CHECK constraint on agreements.status in the initial schema.
+  status: Joi.string().valid('pending', 'signed', 'completed').optional(),
 }).messages({
   'date.min': '"end_date" must be greater than or equal to "start_date" when both are provided'
 });

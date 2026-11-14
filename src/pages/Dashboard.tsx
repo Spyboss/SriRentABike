@@ -9,7 +9,6 @@ import {
   Download, 
   User,
   FileText,
-  LogOut,
   Filter,
   RefreshCw,
   CheckCircle,
@@ -18,7 +17,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { pdfAPI, agreementsAPI } from '../services/api';
-import { Logo } from '../components/Logo';
 
 import { Navbar } from '../components/Navbar';
 
@@ -265,7 +263,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'completed' | 'expired')}
                   className="block w-full pl-10 pr-10 py-3 text-base border-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm rounded-xl appearance-none bg-white transition-all"
                 >
                   <option value="all">All Status</option>

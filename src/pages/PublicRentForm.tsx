@@ -8,10 +8,8 @@ import {
   AlertCircle,
   Loader2,
   Lock,
-  DollarSign,
   RefreshCw,
 } from "lucide-react";
-import { Logo } from "@/components/Logo";
 import { Navbar } from "@/components/Navbar";
 import { FormField } from "@/components/FormField";
 import {
@@ -47,9 +45,10 @@ export default function PublicRentForm() {
   const [outsideArea, setOutsideArea] = useState<boolean>(false);
   const [currency, setCurrency] = useState<"LKR" | "USD">("LKR");
   const [exchangeRate, setExchangeRate] = useState<number>(300); // Default fallback
-  const [loadingRate, setLoadingRate] = useState<boolean>(false);
+  const [, setLoadingRate] = useState<boolean>(false);
 
-  const [deposit, setDeposit] = useState<number>(0);
+  // The public form takes no deposit; it is set by the admin at handover.
+  const [deposit] = useState<number>(0);
   const [signature, setSignature] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

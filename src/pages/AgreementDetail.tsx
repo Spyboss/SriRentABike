@@ -16,14 +16,13 @@ import {
   Clock,
   AlertCircle,
   Edit3,
-  Save,
   X,
   Settings2,
-  Loader2
+  Loader2,
+  LucideIcon
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { useBikesStore } from '@/stores/bikes';
-import { Logo } from '../components/Logo';
 
 interface Agreement {
   id: string;
@@ -164,12 +163,13 @@ export const AgreementDetail: React.FC = () => {
         daily_rate: typeof dailyRate === 'number' ? dailyRate : undefined,
       };
 
-      // Calculate total amount
+      // Calculate total amount using the same day count as /rent, GuestForm and
+      // the PDF: ceil of the date span, minimum 1 day.
       if (typeof dailyRate === 'number' && startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
         const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
         payload.total_amount = diffDays * dailyRate;
       }
 
@@ -411,12 +411,13 @@ export const AgreementDetail: React.FC = () => {
                         deposit: typeof deposit === 'number' ? deposit : undefined
                       };
 
-                      // Calculate total amount
+                      // Calculate total amount using the same day count as /rent,
+                      // GuestForm and the PDF: ceil of the date span, minimum 1 day.
                       if (typeof dailyRate === 'number' && startDate && endDate) {
                         const start = new Date(startDate);
                         const end = new Date(endDate);
                         const diffTime = Math.abs(end.getTime() - start.getTime());
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                        const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
                         payload.total_amount = diffDays * dailyRate;
                       }
 
@@ -527,7 +528,7 @@ export const AgreementDetail: React.FC = () => {
 };
 
 // Helper Components
-const DetailItem = ({ label, value, icon: Icon }: { label: string; value: string; icon: any }) => (
+const DetailItem = ({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) => (
   <div>
     <label className="block text-xs font-bold text-stone-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
       <Icon className="w-3 h-3" />
@@ -537,13 +538,22 @@ const DetailItem = ({ label, value, icon: Icon }: { label: string; value: string
   </div>
 );
 
-const ManagementInput = ({ label, type, value, onChange, placeholder }: any) => (
+// T is inferred from `value` and from the setter passed to `onChange`
+// (both are Dispatch<SetStateAction<T>>), so the narrow state setters
+// stay assignable. The cast is what the `type` branch guarantees at runtime.
+const ManagementInput = <T extends string | number>({ label, type, value, onChange, placeholder }: {
+  label: string;
+  type: string;
+  value: T;
+  onChange: React.Dispatch<React.SetStateAction<T>>;
+  placeholder?: string;
+}) => (
   <div className="space-y-2">
     <label className="text-sm font-bold text-stone-700">{label}</label>
     <input
       type={type}
       value={value}
-      onChange={(e) => onChange(type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value)}
+      onChange={(e) => onChange((type === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value) as T)}
       placeholder={placeholder}
       className="w-full px-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all text-sm font-medium"
     />

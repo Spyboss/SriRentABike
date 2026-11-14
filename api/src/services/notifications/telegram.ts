@@ -212,5 +212,5 @@ export class TelegramNotificationService {
 // Telegram MarkdownV2 requires escaping these characters:
 // _ * [ ] ( ) ~ ` > # + - = | { } . !
 function esc(text: unknown): string {
-    return String(text ?? '').replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
+    return String(text ?? '').replace(/([_*[\]()~`>#+\-=|{}.!\\])/g, '\\$1');
 }

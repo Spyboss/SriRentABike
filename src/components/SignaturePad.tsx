@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { RotateCcw, Check, X } from 'lucide-react';
+import { RotateCcw, Check } from 'lucide-react';
 
 interface SignaturePadProps {
   onSave: (signature: string | null) => void;
@@ -10,19 +10,24 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave }) => {
   const sigCanvas = useRef<SignatureCanvas>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isEmpty, setIsEmpty] = useState(true);
-  const [signatureData, setSignatureData] = useState<string | null>(null);
+
+  // Held in a ref so the mount-only resize effect below stays mount-only:
+  // listing onSave as a dependency would re-run it (and clear the canvas)
+  // whenever the parent re-renders with a new callback identity.
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
 
   const clear = () => {
     sigCanvas.current?.clear();
     setIsEmpty(true);
-    setSignatureData(null);
     onSave(null);
   };
 
   const handleEnd = () => {
     if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
       const data = sigCanvas.current.toDataURL('image/png');
-      setSignatureData(data);
       setIsEmpty(false);
       onSave(data);
     }
@@ -39,8 +44,7 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave }) => {
         canvas.getContext('2d')?.scale(ratio, ratio);
         sigCanvas.current.clear(); // Clear on resize to avoid distortion
         setIsEmpty(true);
-        setSignatureData(null);
-        onSave(null);
+        onSaveRef.current(null);
       }
     };
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
 import { rateAPI } from '@/services/api';
 import { Navbar } from '@/components/Navbar';
 import { 
@@ -12,7 +11,8 @@ import {
   CheckCircle,
   DollarSign,
   Settings,
-  RefreshCw
+  RefreshCw,
+  LucideIcon
 } from 'lucide-react';
 import { BikeModel } from '@/config/bike-rates';
 
@@ -27,7 +27,15 @@ interface PricingConfig {
   rules: PricingRules;
 }
 
-const PricingField = ({ label, value, onChange, type = "number", step, suffix, helper, icon: Icon }: any) => (
+const PricingField = ({ label, value, onChange, step, suffix, helper, icon: Icon }: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  step?: string;
+  suffix?: string;
+  helper?: string;
+  icon?: LucideIcon;
+}) => (
   <div className="space-y-2.5">
     <label className="text-[10px] font-black uppercase tracking-wider text-stone-400 ml-1 block">{label}</label>
     <div className="relative group">
@@ -37,10 +45,10 @@ const PricingField = ({ label, value, onChange, type = "number", step, suffix, h
         </div>
       )}
       <input
-        type={type}
+        type="number"
         step={step}
         value={value}
-        onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+        onChange={(e) => onChange(Number(e.target.value))}
         className={`w-full ${Icon ? 'pl-12' : 'px-5'} ${suffix ? 'pr-14' : 'pr-5'} py-4 rounded-2xl border-stone-200 bg-stone-50 text-stone-900 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all placeholder-stone-300 font-medium min-h-[56px] shadow-sm hover:border-stone-300`}
       />
       {suffix && (
@@ -54,7 +62,6 @@ const PricingField = ({ label, value, onChange, type = "number", step, suffix, h
 );
 
 export default function PricingManagement() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

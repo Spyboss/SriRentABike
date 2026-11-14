@@ -345,9 +345,9 @@ export class PDFService {
                 <th>TOTAL AMOUNT</th>
               </tr>
               <tr>
-                <td>$${data.agreement.daily_rate.toFixed(2)}</td>
-                <td>${Math.ceil((new Date(data.agreement.end_date).getTime() - new Date(data.agreement.start_date).getTime()) / (1000 * 60 * 60 * 24))}</td>
-                <td>$${data.agreement.total_amount.toFixed(2)}</td>
+                <td>LKR ${data.agreement.daily_rate.toFixed(2)}</td>
+                <td>${Math.max(1, Math.ceil((new Date(data.agreement.end_date).getTime() - new Date(data.agreement.start_date).getTime()) / (1000 * 60 * 60 * 24)))}</td>
+                <td>LKR ${data.agreement.total_amount.toFixed(2)}</td>
               </tr>
             </table>
           </div>
@@ -361,7 +361,7 @@ export class PDFService {
         <div class="section">
           <div class="section-title">04 DEPOSIT</div>
           <div class="clause">
-            <span class="clause-number">04.1.</span> The Rental further agrees to make a deposit of <strong>$${data.agreement.deposit.toFixed(2)}</strong> with the owner, said deposit to be used, in the event of loss or damage to the vehicle/scooter or equipment during the term of this motor vehicle/scooter rental agreement, to defray fully or partially the cost of necessary repairs or replacement.
+            <span class="clause-number">04.1.</span> The Rental further agrees to make a deposit of <strong>LKR ${data.agreement.deposit.toFixed(2)}</strong> with the owner, said deposit to be used, in the event of loss or damage to the vehicle/scooter or equipment during the term of this motor vehicle/scooter rental agreement, to defray fully or partially the cost of necessary repairs or replacement.
           </div>
         </div>
 

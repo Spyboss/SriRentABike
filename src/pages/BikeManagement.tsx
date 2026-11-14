@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useBikesStore } from '@/stores/bikes';
 import { bikeMetaAPI } from '@/services/api';
-import { Plus, Edit3, Trash2, RefreshCw, CheckCircle, AlertCircle, Search, Filter, Bike, ChevronRight, X, Upload } from 'lucide-react';
+import { Plus, Edit3, Trash2, RefreshCw, AlertCircle, Search, Filter, Bike, X, Upload } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 
 export default function BikeManagement() {
@@ -159,7 +159,7 @@ export default function BikeManagement() {
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                 <select
                   value={filter}
-                  onChange={(e) => setFilter(e.target.value as any)}
+                  onChange={(e) => setFilter(e.target.value as 'all' | 'available' | 'rented' | 'maintenance')}
                   className="w-full pl-10 pr-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all appearance-none text-sm font-bold min-h-[48px]"
                 >
                   <option value="all">All Status</option>
