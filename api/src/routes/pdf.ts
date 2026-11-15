@@ -111,17 +111,23 @@ router.get('/download/:agreementId', authenticateToken, requireAdmin, async (req
       return res.status(404).json({ error: 'Agreement not found' });
     }
 
-    // Mark agreement as completed upon download
+    if (!agreement.pdf_url) {
+      return res.status(404).json({ error: 'PDF not generated yet' });
+    }
+
+    // Record the document event only. Downloading a PDF says nothing about
+    // whether the rental finished — it used to force status to 'completed',
+    // which is why that status could not be trusted.
     const { error: statusErr } = await supabase
       .from('agreements')
-      .update({ status: 'completed', updated_at: new Date().toISOString(), pdf_status: 'downloaded' })
+      .update({ updated_at: new Date().toISOString(), pdf_status: 'downloaded' })
       .eq('id', agreementId);
     if (statusErr) {
       const code = (statusErr as import('@supabase/supabase-js').PostgrestError | { code?: string })?.code;
       if (code !== 'PGRST204') {
         throw statusErr;
       } else {
-        await supabase.from('agreements').update({ status: 'completed', updated_at: new Date().toISOString() }).eq('id', agreementId);
+        await supabase.from('agreements').update({ updated_at: new Date().toISOString() }).eq('id', agreementId);
       }
     }
 
@@ -134,10 +140,6 @@ router.get('/download/:agreementId', authenticateToken, requireAdmin, async (req
         agreement_id: agreementId,
         timestamp: new Date().toISOString()
       }]);
-
-    if (!agreement.pdf_url) {
-      return res.status(404).json({ error: 'PDF not generated yet' });
-    }
 
     // Fetch PDF from storage
     const response = await fetch(agreement.pdf_url);

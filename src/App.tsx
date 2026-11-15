@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import PublicRentForm from "@/pages/PublicRentForm";
 import PublicAgreementStatus from "@/pages/PublicAgreementStatus";
 import BikeManagement from "@/pages/BikeManagement";
+import NewAgreement from "@/pages/NewAgreement";
 
 import PricingManagement from "@/pages/PricingManagement";
 import NotFound from "@/pages/NotFound";
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/agreement/:reference" element={<PublicAgreementStatus />} />
         <Route path="/admin/bikes" element={<BikeManagement />} />
         <Route path="/admin/pricing" element={<PricingManagement />} />
+        <Route path="/admin/new-agreement" element={<NewAgreement />} />
         <Route path="/rent/:token" element={<GuestForm />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

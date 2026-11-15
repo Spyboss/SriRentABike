@@ -2,19 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
-import { useAgreementsStore } from '../stores/agreements';
+import { useAgreementsStore, type Agreement, type AgreementStatus } from '../stores/agreements';
 import {
   Search, 
   Eye, 
   Download, 
-  User,
-  FileText,
   Filter,
   RefreshCw,
   CheckCircle,
   Clock,
   AlertCircle,
   Trash2,
+  Plus,
+  KeyRound,
+  PenLine,
+  Calendar,
 } from 'lucide-react';
 import { pdfAPI, agreementsAPI } from '../services/api';
 
@@ -27,7 +29,7 @@ export const Dashboard: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'expired'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | AgreementStatus>('all');
 
   // Debounce search term
   useEffect(() => {
@@ -52,6 +54,18 @@ export const Dashboard: React.FC = () => {
       status: statusFilter === 'all' ? undefined : statusFilter
     });
   }, [user, navigate, fetchAgreements, debouncedSearchTerm, statusFilter]);
+
+  // Owner's questions, computed from the lifecycle. Overdue is derived
+  // (active AND past end date), never a stored status.
+  const today = new Date().toDateString();
+  const isOverdue = (a: Agreement) =>
+    a.status === 'active' && !!a.end_date && new Date(a.end_date) < new Date(today);
+  const stats = {
+    outNow: agreements.filter((a) => a.status === 'active').length,
+    overdue: agreements.filter(isOverdue).length,
+    startingToday: agreements.filter((a) => a.start_date && new Date(a.start_date).toDateString() === today).length,
+    awaitingSignature: agreements.filter((a) => a.status === 'pending').length,
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -100,21 +114,28 @@ export const Dashboard: React.FC = () => {
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
-            Completed
+            Returned
+          </span>
+        );
+      case 'active':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <KeyRound className="w-3 h-3 mr-1" />
+            Out now
+          </span>
+        );
+      case 'signed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+            <PenLine className="w-3 h-3 mr-1" />
+            Signed
           </span>
         );
       case 'pending':
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
             <Clock className="w-3 h-3 mr-1" />
-            Pending
-          </span>
-        );
-      case 'expired':
-        return (
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            Expired
+            Awaiting signature
           </span>
         );
       default:
@@ -146,6 +167,13 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className="flex flex-wrap gap-3">
             <button
+              onClick={() => navigate('/admin/new-agreement')}
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold rounded-xl text-white bg-stone-900 hover:bg-stone-800 transition-colors shadow-lg shadow-stone-200 min-h-[48px]"
+            >
+              <Plus className="w-4 h-4" />
+              New Agreement
+            </button>
+            <button
               onClick={() => navigate('/admin/pricing')}
               className="flex-1 md:flex-none inline-flex items-center justify-center px-4 py-2.5 border border-stone-200 shadow-sm text-sm font-medium rounded-xl text-stone-700 bg-white hover:bg-stone-50 transition-colors min-h-[48px]"
             >
@@ -160,69 +188,59 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards — the owner's actual questions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-stone-50 rounded-lg">
-                <FileText className="h-5 w-5 md:h-6 md:w-6 text-stone-400" />
+              <div className="flex-shrink-0 p-2 bg-blue-50 rounded-lg">
+                <KeyRound className="h-5 w-5 md:h-6 md:w-6 text-blue-500" />
               </div>
               <div className="ml-3 md:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Total</dt>
-                  <dd className="text-lg md:text-xl font-bold text-stone-900">{agreements.length}</dd>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Out now</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">{stats.outNow}</dd>
                 </dl>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
             <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-green-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 md:h-6 md:w-6 text-green-500" />
+              <div className="flex-shrink-0 p-2 bg-red-50 rounded-lg">
+                <AlertCircle className="h-5 w-5 md:h-6 md:w-6 text-red-500" />
               </div>
               <div className="ml-3 md:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Completed</dt>
-                  <dd className="text-lg md:text-xl font-bold text-stone-900">
-                    {agreements.filter(a => a.status === 'completed').length}
-                  </dd>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Overdue</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">{stats.overdue}</dd>
                 </dl>
               </div>
             </div>
           </div>
-          
+
+          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 p-2 bg-orange-50 rounded-lg">
+                <Calendar className="h-5 w-5 md:h-6 md:w-6 text-orange-500" />
+              </div>
+              <div className="ml-3 md:ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Starting today</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">{stats.startingToday}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
             <div className="flex items-center">
               <div className="flex-shrink-0 p-2 bg-yellow-50 rounded-lg">
-                <Clock className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
+                <PenLine className="h-5 w-5 md:h-6 md:w-6 text-yellow-500" />
               </div>
               <div className="ml-3 md:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Pending</dt>
-                  <dd className="text-lg md:text-xl font-bold text-stone-900">
-                    {agreements.filter(a => a.status === 'pending').length}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-4 md:p-5 shadow-sm rounded-2xl border border-stone-100">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 p-2 bg-blue-50 rounded-lg">
-                <User className="h-5 w-5 md:h-6 md:w-6 text-blue-500" />
-              </div>
-              <div className="ml-3 md:ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Today</dt>
-                  <dd className="text-lg md:text-xl font-bold text-stone-900">
-                    {agreements.filter(a => {
-                      const today = new Date().toDateString();
-                      const agreementDate = new Date(a.created_at).toDateString();
-                      return agreementDate === today;
-                    }).length}
-                  </dd>
+                  <dt className="text-xs md:text-sm font-medium text-stone-500 truncate">Awaiting signature</dt>
+                  <dd className="text-lg md:text-xl font-bold text-stone-900">{stats.awaitingSignature}</dd>
                 </dl>
               </div>
             </div>
@@ -263,13 +281,14 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending' | 'completed' | 'expired')}
+                  onChange={(e) => setStatusFilter(e.target.value as 'all' | AgreementStatus)}
                   className="block w-full pl-10 pr-10 py-3 text-base border-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm rounded-xl appearance-none bg-white transition-all"
                 >
                   <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="completed">Completed</option>
-                  <option value="expired">Expired</option>
+                  <option value="pending">Awaiting signature</option>
+                  <option value="signed">Signed</option>
+                  <option value="active">Out now</option>
+                  <option value="completed">Returned</option>
                 </select>
               </div>
             </div>
@@ -311,9 +330,16 @@ export const Dashboard: React.FC = () => {
                         <div className="text-sm text-stone-900">{agreement.tourist_data?.email}</div>
                         <div className="text-xs text-stone-500">{agreement.tourist_data?.phone_number}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(agreement.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(agreement.status)}{isOverdue(agreement) && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">OVERDUE</span>
+                      )}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-600">
-                        {agreement.bike_id ? `Bike #${agreement.bike_id}` : 'Not assigned'}
+                        <div>{agreement.bike ? `${agreement.bike.model} • ${agreement.bike.plate_no}` : 'Not assigned'}</div>
+                        <div className="text-xs text-stone-400">
+                          {agreement.start_date && agreement.end_date
+                            ? `${new Date(agreement.start_date).toLocaleDateString()} – ${new Date(agreement.end_date).toLocaleDateString()}`
+                            : ''}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center gap-2">
@@ -351,8 +377,13 @@ export const Dashboard: React.FC = () => {
                     </div>
                     
                     <div className="grid grid-cols-2 gap-2 mb-4 text-xs">
-                      <div className="text-stone-500">Bike: <span className="text-stone-900 font-medium">{agreement.bike_id || 'Not assigned'}</span></div>
+                      <div className="text-stone-500">Bike: <span className="text-stone-900 font-medium">{agreement.bike ? agreement.bike.plate_no : 'Not assigned'}</span></div>
                       <div className="text-stone-500">Contact: <span className="text-stone-900 font-medium">{agreement.tourist_data?.phone_number}</span></div>
+                      <div className="text-stone-500 col-span-2">Dates: <span className="text-stone-900 font-medium">
+                        {agreement.start_date && agreement.end_date
+                          ? `${new Date(agreement.start_date).toLocaleDateString()} – ${new Date(agreement.end_date).toLocaleDateString()}`
+                          : 'Not set'}
+                      </span></div>
                     </div>
 
                     <div className="flex items-center justify-between border-t border-stone-50 pt-3">

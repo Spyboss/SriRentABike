@@ -28,6 +28,16 @@ export interface Bike {
   created_at: string;
 }
 
+// Rental lifecycle, not a document flag:
+//   pending   request received, awaiting admin confirmation
+//   signed    confirmed, agreement executed, awaiting pickup
+//   active    keys handed over, bike is out
+//   completed returned and settled
+// Overdue is derived (active AND end_date < today), never stored.
+export type AgreementStatus = 'pending' | 'signed' | 'active' | 'completed';
+
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
+
 export interface Agreement {
   id: string;
   agreement_no: string;
@@ -39,7 +49,11 @@ export interface Agreement {
   daily_rate: number;
   total_amount: number;
   deposit: number;
-  status: 'pending' | 'signed' | 'completed';
+  status: AgreementStatus;
+  payment_status: PaymentStatus;
+  amount_paid: number;
+  picked_up_at?: string | null;
+  returned_at?: string | null;
   pdf_url?: string;
   signature_url?: string;
   signed_at?: string;
@@ -97,7 +111,9 @@ export interface UpdateAgreementRequest {
   daily_rate?: number;
   total_amount?: number;
   deposit?: number;
-  status?: 'pending' | 'signed' | 'completed';
+  status?: AgreementStatus;
+  payment_status?: PaymentStatus;
+  amount_paid?: number;
 }
 
 export interface AdminLoginRequest {

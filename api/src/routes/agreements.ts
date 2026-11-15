@@ -3,15 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '../config/database';
 import { authenticateToken, AuthRequest, requireAdmin } from '../middleware/auth';
 import { validateRequest } from '../middleware/validate';
-import { createAgreementSchema, updateAgreementSchema } from '../schemas';
-import { CreateAgreementRequest, UpdateAgreementRequest } from '../models/types';
+import { createAgreementSchema, createAdminAgreementSchema, updateAgreementSchema, AGREEMENT_TRANSITIONS } from '../schemas';
+import { CreateAgreementRequest, AgreementStatus, UpdateAgreementRequest } from '../models/types';
 import { TelegramNotificationService } from '../services/notifications/telegram';
 
 const router = express.Router();
 
 // Create new agreement (guest)
-router.post('/', validateRequest(createAgreementSchema), async (req: express.Request, res: express.Response) => {
-  try {
+router.post('/', validateRequest(createAgreementSchema), async (req: express.Request, res: express.Response) => {  try {
     const {
       tourist_data,
       signature,
@@ -79,10 +78,91 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
       throw agreementError;
     }
 
-    // Create guest link
+    // No guest link here: the tourist has already signed inline on /rent, so a
+    // signing link would be redundant (and max_uses:1 would just sit unused).
+    // Links are minted by POST /admin below for bookings taken over the phone.
+
+    // Trigger Telegram notification (background — does not block HTTP response)
+    (async () => {
+      try {
+        await TelegramNotificationService.sendBookingAlert(req.body, agreementNo);
+      } catch (error) {
+        console.error('Telegram notification failed after all retries:', error);
+      }
+    })();
+
+    res.json({
+      agreement_id: agreement.id,
+      agreement_no: agreementNo,
+      status: 'pending'
+    });
+
+  } catch (error) {
+    console.error('Create agreement error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const errorDetails = error && typeof error === 'object' && 'details' in error ? error.details : undefined;
+    res.status(500).json({
+      error: errorMessage,
+      details: errorDetails
+    });
+  }
+});
+
+// Create new agreement (admin) — for bookings taken over the phone or WhatsApp.
+// No signature yet: the agreement goes out unsigned with a guest link, and the
+// tourist supplies the signature through that link. This is the entry point the
+// WhatsApp workflow was missing — previously the only way to create an
+// agreement was the public /rent form.
+router.post('/admin', authenticateToken, requireAdmin, validateRequest(createAdminAgreementSchema), async (req: AuthRequest, res: express.Response) => {
+  try {
+    const {
+      tourist_data,
+      start_date,
+      end_date,
+      daily_rate,
+      total_amount,
+      deposit,
+      requested_model,
+      outside_area
+    }: Omit<CreateAgreementRequest, 'signature'> = req.body;
+
+    const { data: tourist, error: touristError } = await supabase
+      .from('tourists')
+      .insert([tourist_data])
+      .select()
+      .single();
+
+    if (touristError) {
+      throw touristError;
+    }
+
+    const agreementNo = `SRI-${Date.now().toString().slice(-6)}`;
+    const { data: agreement, error: agreementError } = await supabase
+      .from('agreements')
+      .insert([{
+        agreement_no: agreementNo,
+        tourist_id: tourist.id,
+        admin_id: req.user!.id,
+        status: 'pending',
+        start_date,
+        end_date,
+        daily_rate: daily_rate || 0,
+        total_amount: total_amount || 0,
+        deposit: deposit || 0,
+        requested_model: requested_model || null,
+        outside_area: outside_area || false
+      }])
+      .select()
+      .single();
+
+    if (agreementError) {
+      throw agreementError;
+    }
+
+    // Mint the signing link the admin will send on WhatsApp.
     const guestToken = uuidv4();
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     const { error: guestLinkError } = await supabase
       .from('guest_links')
@@ -101,16 +181,18 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
       throw guestLinkError;
     }
 
-    // Trigger Telegram notification (background — does not block HTTP response)
-    (async () => {
-      try {
-        await TelegramNotificationService.sendBookingAlert(req.body, agreementNo);
-      } catch (error) {
-        console.error('Telegram notification failed after all retries:', error);
-      }
-    })();
+    try {
+      await supabase.from('audit_events').insert([{
+        actor: req.user!.email,
+        action: 'create_agreement',
+        agreement_id: agreement.id,
+        timestamp: new Date().toISOString()
+      }]);
+    } catch (auditError) {
+      console.error('Create agreement audit error:', auditError);
+    }
 
-    res.json({
+    res.status(201).json({
       agreement_id: agreement.id,
       agreement_no: agreementNo,
       status: 'pending',
@@ -118,13 +200,9 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
     });
 
   } catch (error) {
-    console.error('Create agreement error:', error);
+    console.error('Admin create agreement error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    const errorDetails = error && typeof error === 'object' && 'details' in error ? error.details : undefined;
-    res.status(500).json({
-      error: errorMessage,
-      details: errorDetails
-    });
+    res.status(500).json({ error: errorMessage });
   }
 });
 
@@ -319,15 +397,16 @@ router.put('/:id', authenticateToken, requireAdmin, validateRequest(updateAgreem
       }
     }
 
-    // Update agreement
+    // Update agreement.
+    // Assigning a bike does NOT advance status. It used to force status to
+    // 'completed', which is why "completed" meant "an admin clicked a button"
+    // rather than "the rental finished". Status only moves through the
+    // lifecycle endpoints below.
     const updateBody: Record<string, unknown> = {
       ...updates,
       admin_id: req.user!.id,
       updated_at: new Date().toISOString()
     };
-    if (updates.bike_id) {
-      updateBody.status = 'completed';
-    }
     const { data: agreement, error } = await supabase
       .from('agreements')
       .update(updateBody)
@@ -364,6 +443,103 @@ router.put('/:id', authenticateToken, requireAdmin, validateRequest(updateAgreem
 
   } catch (error) {
     console.error('Update agreement error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Advance an agreement's lifecycle status — forward only, one step at a time.
+//
+// This is the only place status changes. Every transition carries its side
+// effects with it — bike availability and the picked_up_at/returned_at
+// timestamps — so a status can never drift away from the physical reality
+// it describes. See AGREEMENT_TRANSITIONS for the legal moves. A wrong click
+// is corrected by moving the rental forward properly (e.g. mark returned), not
+// by stepping backwards, which would strand the bike's availability.
+router.post('/:id/status', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    const { status: next } = req.body as { status?: string };
+
+    if (!next || !(next in AGREEMENT_TRANSITIONS)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const { data: current, error: fetchError } = await supabase
+      .from('agreements')
+      .select('id, status, bike_id')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .single();
+
+    if (fetchError || !current) {
+      return res.status(404).json({ error: 'Agreement not found' });
+    }
+
+    const prev = current.status as AgreementStatus;
+    if (!AGREEMENT_TRANSITIONS[prev]?.includes(next)) {
+      return res.status(409).json({
+        error: `Cannot move from '${prev}' to '${next}'`
+      });
+    }
+
+    // Picking up requires a physical bike to have been assigned first.
+    if (next === 'active' && !current.bike_id) {
+      return res.status(400).json({ error: 'Assign a bike before marking this rental active' });
+    }
+
+    const now = new Date().toISOString();
+    const agreementUpdate: Record<string, unknown> = {
+      status: next,
+      admin_id: req.user!.id,
+      updated_at: now
+    };
+
+    // Timestamps record the two moments that were previously invisible.
+    // Both are forward-only: only 'active' can set picked_up_at, only
+    // 'completed' can set returned_at, and no legal transition clears either.
+    if (next === 'active') agreementUpdate.picked_up_at = now;
+    if (next === 'completed') agreementUpdate.returned_at = now;
+
+    const { data: agreement, error } = await supabase
+      .from('agreements')
+      .update(agreementUpdate)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Agreement not found' });
+      }
+      throw error;
+    }
+
+    // The bike follows the rental: 'rented' whenever it is held by an
+    // agreement that is not finished, 'available' the moment it comes back.
+    if (current.bike_id) {
+      await supabase
+        .from('bikes')
+        .update({
+          availability_status: next === 'completed' ? 'available' : 'rented'
+        })
+        .eq('id', current.bike_id);
+    }
+
+    try {
+      await supabase.from('audit_events').insert([{
+        actor: req.user!.email,
+        action: `status_${next}`,
+        agreement_id: id,
+        timestamp: now
+      }]);
+    } catch (auditError) {
+      console.error('Status change audit error:', auditError);
+    }
+
+    res.json({ agreement });
+
+  } catch (error) {
+    console.error('Agreement status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

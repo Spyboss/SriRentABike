@@ -3,7 +3,8 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth';
 import { useBikesStore } from '@/stores/bikes';
-import { bikeMetaAPI } from '@/services/api';
+import { bikeMetaAPI, rateAPI } from '@/services/api';
+import { BIKE_MODELS, BikeModel } from '@/config/bike-rates';
 import { Plus, Edit3, Trash2, RefreshCw, AlertCircle, Search, Filter, Bike, X, Upload } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 
@@ -21,12 +22,22 @@ export default function BikeManagement() {
   const [docs, setDocs] = useState<FileList | null>(null);
   const [docUrls, setDocUrls] = useState<string[]>([]);
 
+  // The model list comes from the price list, so a bike's model can never
+  // diverge from the models customers can actually book. Free text here is
+  // what let the fleet and the price list become two different universes.
+  const [priceModels, setPriceModels] = useState<BikeModel[]>(BIKE_MODELS);
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
     fetchAll();
+    rateAPI.getPricing().then((r) => {
+      if (r.data?.models?.length) setPriceModels(r.data.models);
+    }).catch(() => {
+      // Keep the code defaults — /settings/pricing is unreachable.
+    });
   }, [user, navigate, fetchAll]);
 
   const filtered = bikes.filter((b) => {
@@ -306,13 +317,25 @@ export default function BikeManagement() {
               <div className="grid grid-cols-1 gap-5">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-stone-700 ml-1">Bike Model *</label>
-                  <input 
-                    value={form.model} 
-                    onChange={(e) => setForm({ ...form, model: e.target.value })} 
-                    required 
-                    placeholder="e.g., Honda Dio"
-                    className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
-                  />
+                  <select
+                    value={form.model}
+                    onChange={(e) => setForm({ ...form, model: e.target.value })}
+                    required
+                    className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px] appearance-none text-stone-900 font-medium"
+                  >
+                    <option value="" disabled>Select a model</option>
+                    {priceModels.map((m) => (
+                      <option key={m.id} value={m.name}>
+                        {m.name} — LKR {m.dailyRateLKR.toLocaleString()}/day
+                      </option>
+                    ))}
+                    {/* A model that is no longer on the price list stays
+                        selectable so editing an older bike never silently
+                        rewrites its model. */}
+                    {form.model && !priceModels.some((m) => m.name === form.model) && (
+                      <option value={form.model}>{form.model} (not on price list)</option>
+                    )}
+                  </select>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

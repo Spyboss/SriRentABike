@@ -28,6 +28,32 @@ export const createAgreementSchema = Joi.object({
   outside_area: Joi.boolean().optional(),
 });
 
+// Admin books a rental over the phone / WhatsApp. No signature yet — the
+// tourist supplies it later through the guest link, which is the whole point
+// of that link existing.
+export const createAdminAgreementSchema = Joi.object({
+  tourist_data: touristSchema.required(),
+  start_date: Joi.date().iso().required(),
+  end_date: Joi.date().iso().min(Joi.ref('start_date')).required(),
+  daily_rate: Joi.number().min(0).optional(),
+  total_amount: Joi.number().min(0).optional(),
+  deposit: Joi.number().min(0).optional(),
+  requested_model: Joi.string().optional(),
+  outside_area: Joi.boolean().optional(),
+}).messages({
+  'date.min': '"end_date" must be greater than or equal to "start_date" when both are provided'
+});
+
+// Status moves forward only, one step at a time. Every transition has a
+// side effect attached to it in the route (bike availability, timestamps),
+// so letting the client jump straight to 'completed' would skip them.
+export const AGREEMENT_TRANSITIONS: Record<string, string[]> = {
+  pending: ['signed'],
+  signed: ['active'],
+  active: ['completed'],
+  completed: [],
+};
+
 export const updateAgreementSchema = Joi.object({
   bike_id: Joi.string().uuid().optional(),
   start_date: Joi.date().iso().optional(),
@@ -38,7 +64,9 @@ export const updateAgreementSchema = Joi.object({
   total_amount: Joi.number().min(0).optional(),
   deposit: Joi.number().min(0).optional(),
   // Must match the CHECK constraint on agreements.status in the initial schema.
-  status: Joi.string().valid('pending', 'signed', 'completed').optional(),
+  status: Joi.string().valid('pending', 'signed', 'active', 'completed').optional(),
+  payment_status: Joi.string().valid('unpaid', 'partial', 'paid').optional(),
+  amount_paid: Joi.number().min(0).optional(),
 }).messages({
   'date.min': '"end_date" must be greater than or equal to "start_date" when both are provided'
 });

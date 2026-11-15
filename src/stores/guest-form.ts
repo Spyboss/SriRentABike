@@ -35,7 +35,7 @@ interface GuestFormState {
   validateToken: (token: string) => Promise<void>;
   updateTouristData: (data: Partial<TouristData>) => void;
   setSignature: (signature: string | null) => void;
-  submitForm: () => Promise<void>;
+  submitForm: (payload: Record<string, unknown>) => Promise<void>;
   clearErrors: () => void;
   resetForm: () => void;
 }
@@ -114,58 +114,33 @@ export const useGuestFormStore = create<GuestFormState>((set, get) => ({
     set({ signature });
   },
   
-  submitForm: async () => {
-    const { touristData, signature, guestToken } = get();
-    
-    if (!signature) {
-      set({ submitError: 'Please provide your signature' });
+  submitForm: async (payload: Record<string, unknown>) => {
+    const { guestToken } = get();
+
+    if (!guestToken) {
+      set({ submitError: 'Invalid guest link' });
       return;
     }
-    
-    // Validate required fields
-    const requiredFields: (keyof TouristData)[] = [
-      'first_name', 'last_name', 'passport_no', 'nationality', 
-      'home_address', 'phone_number', 'email'
-    ];
-    
-    for (const field of requiredFields) {
-      if (!touristData[field]?.trim()) {
-        set({ submitError: `${field.replace('_', ' ').toUpperCase()} is required` });
-        return;
-      }
-    }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(touristData.email)) {
-      set({ submitError: 'Please enter a valid email address' });
-      return;
-    }
-    
-    // Validate phone number (basic validation)
-    const phoneRegex = /^[+]?[0-9\s\-()]+$/;
-    if (!phoneRegex.test(touristData.phone_number)) {
-      set({ submitError: 'Please enter a valid phone number' });
-      return;
-    }
-    
+
     set({ isSubmitting: true, submitError: null });
-    
+
     try {
-      // Mark guest link as used
-      await guestLinksAPI.markAsUsed(guestToken!);
-      
-      set({ 
+      // Signs the agreement the link points at. The old path called
+      // agreementsAPI.create here, which minted a duplicate booking instead of
+      // updating the original — that is why every link sat unused.
+      await guestLinksAPI.submit(guestToken, payload);
+
+      set({
         submitSuccess: true,
-        isSubmitting: false 
+        isSubmitting: false
       });
     } catch (error: unknown) {
       const respErr = error as { response?: { data?: { error?: string } } };
       const message = respErr.response?.data?.error || (error instanceof Error ? error.message : null) || 'Failed to submit form';
       const errorMessage = message;
-      set({ 
+      set({
         submitError: errorMessage,
-        isSubmitting: false 
+        isSubmitting: false
       });
     }
   },

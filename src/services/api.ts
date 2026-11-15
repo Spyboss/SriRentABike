@@ -46,19 +46,29 @@ export const authAPI = {
 export const agreementsAPI = {
   create: (data: unknown) =>
     api.post('/agreements', data),
-  
+
+  // Admin books over the phone / WhatsApp. Returns guest_token — the signing
+  // link to send on WhatsApp.
+  createAdmin: (data: unknown) =>
+    api.post('/agreements/admin', data),
+
   getAll: (params?: Record<string, string | number | boolean | undefined>) =>
     api.get('/agreements', { params }),
-  
+
   getById: (id: string) =>
     api.get(`/agreements/${id}`),
-  
+
   update: (id: string, data: unknown) =>
     api.put(`/agreements/${id}`, data),
-  
+
+  // The only path that changes status. Carries the side effects (bike
+  // availability, picked_up_at / returned_at) with it.
+  setStatus: (id: string, status: 'pending' | 'signed' | 'active' | 'completed') =>
+    api.post(`/agreements/${id}/status`, { status }),
+
   getPublicStatus: (reference: string) =>
     api.get(`/agreements/public/${reference}`),
-  
+
   delete: (id: string) =>
     api.delete(`/agreements/${id}`),
 };
@@ -67,13 +77,23 @@ export const agreementsAPI = {
 export const guestLinksAPI = {
   validate: (token: string) =>
     api.get(`/guest-links/validate/${token}`),
-  
+
   getAgreement: (token: string) =>
     api.get(`/guest-links/agreement/${token}`),
-  
-  markAsUsed: (token: string) =>
-    api.post(`/guest-links/use/${token}`),
+
+  // Signs the agreement the link points at — writes back onto it instead of
+  // creating a duplicate booking.
+  submit: (token: string, data: unknown) =>
+    api.post(`/guest-links/submit/${token}`, data),
+
+  // Mint a fresh signing link for an agreement (admin).
+  create: (agreementId: string) =>
+    api.post('/guest-links', { agreement_id: agreementId }),
 };
+
+// Build the shareable signing URL for a guest token.
+export const guestLinkUrl = (token: string) =>
+  `${window.location.origin}/rent/${token}`;
 
 // PDF API
 export const pdfAPI = {

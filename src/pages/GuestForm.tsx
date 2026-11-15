@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGuestFormStore } from '../stores/guest-form';
 import { SignaturePad } from '../components/SignaturePad';
-import { agreementsAPI } from '../services/api';
 import { CheckCircle, AlertCircle, Loader2, Calendar, CreditCard, User, Mail, MapPin, Building2, Home } from 'lucide-react';
 import { rateAPI } from '@/services/api';
 import { BIKE_MODELS, PRICING_RULES, BikeModel } from '@/config/bike-rates';
@@ -17,6 +16,7 @@ interface TokenAgreement {
   end_date?: string | null;
   requested_model?: string | null;
   outside_area?: boolean | null;
+  deposit?: number | null;
 }
 
 export const GuestForm: React.FC = () => {
@@ -76,6 +76,9 @@ export const GuestForm: React.FC = () => {
     if (agr.start_date) setStartDate(String(agr.start_date).slice(0, 10));
     if (agr.end_date) setEndDate(String(agr.end_date).slice(0, 10));
     if (agr.outside_area) setOutsideArea(true);
+    // Deposit is a term the owner agreed offline — show it, don't let the
+    // guest edit it (the submit endpoint ignores deposit anyway).
+    if (typeof agr.deposit === 'number') setDeposit(agr.deposit);
     if (agr.requested_model) {
       const match = bikeModels.find((m) => m.name === agr.requested_model);
       if (match) setSelectedModelId(match.id);
@@ -147,30 +150,44 @@ export const GuestForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
-    
+
     if (!signature) {
       alert('Please provide your signature');
       return;
     }
 
+    // Required-field checks the store used to run. Kept here so a bad form
+    // never reaches the API.
+    const required: (keyof typeof touristData)[] = [
+      'first_name', 'last_name', 'passport_no', 'nationality',
+      'home_address', 'phone_number', 'email',
+    ];
+    for (const f of required) {
+      if (!String(touristData[f] || '').trim()) {
+        alert(`${String(f).replace('_', ' ').toUpperCase()} is required`);
+        return;
+      }
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(touristData.email)) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
     setIsSubmittingForm(true);
-    
+
     try {
-      const formData = {
+      // Signs the agreement this link points at — no new booking is created.
+      await submitForm({
         tourist_data: touristData,
-        signature: signature,
+        signature,
         start_date: startDate,
         end_date: endDate,
-        daily_rate: pricing.baseDailyRateLKR, // Storing base rate (same as /rent)
+        daily_rate: pricing.baseDailyRateLKR,
         total_amount: Math.round(pricing.totalLKR),
-        deposit,
         requested_model: selectedModel.name,
         outside_area: outsideArea,
-      };
-      
-      await agreementsAPI.create(formData);
-      await submitForm();
-      
+      });
+
     } catch (error: unknown) {
       const respErr = error as { response?: { data?: { error?: string } } };
       const message = respErr.response?.data?.error || (error instanceof Error ? error.message : null) || 'Failed to submit form. Please try again.';
@@ -306,9 +323,10 @@ export const GuestForm: React.FC = () => {
                 label="Security Deposit"
                 type="number"
                 value={deposit}
-                onChange={(e) => setDeposit(Number(e.target.value))}
                 icon={CreditCard}
                 suffix="LKR"
+                readOnly
+                required={false}
               />
             </div>
 
