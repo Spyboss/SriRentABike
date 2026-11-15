@@ -44,7 +44,9 @@ for (const m of a) {
 // Sanity: no monthly rate should be negative, and max must exceed min.
 for (const m of a) {
   if (m.monthlyRateLKR < 0) { console.log(`FAIL negative monthly: ${m.id}`); ok = false; }
-  if (m.dailyRateMaxLKR <= m.dailyRateLKR) { console.log(`FAIL max <= min: ${m.id}`); ok = false; }
+  // Equal is fine: a flat rate (max == min) is a legitimate price, as with
+  // Zoom 110cc at LKR 2,500. Only an inverted range is a bug.
+  if (m.dailyRateMaxLKR < m.dailyRateLKR) { console.log(`FAIL max < min: ${m.id}`); ok = false; }
   if (m.dailyRateLKR <= 0) { console.log(`FAIL non-positive daily: ${m.id}`); ok = false; }
 }
 process.exit(ok ? 0 : 1);

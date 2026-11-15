@@ -306,7 +306,7 @@ export const GuestForm: React.FC = () => {
                     {bikeModels.map((model) => (
                       <option key={model.id} value={model.id}>
                         {model.name} -{" "}
-                        {model.dailyRateMaxLKR
+                        {model.dailyRateMaxLKR && model.dailyRateMaxLKR > model.dailyRateLKR
                           ? `LKR ${model.dailyRateLKR.toLocaleString()} - LKR ${model.dailyRateMaxLKR.toLocaleString()}/day`
                           : `LKR ${model.dailyRateLKR.toLocaleString()}/day`}
                       </option>

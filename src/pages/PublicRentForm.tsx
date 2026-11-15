@@ -365,7 +365,7 @@ export default function PublicRentForm() {
                     {bikeModels.map((model) => (
                       <option key={model.id} value={model.id}>
                         {model.name} -{" "}
-                        {model.dailyRateMaxLKR
+                        {model.dailyRateMaxLKR && model.dailyRateMaxLKR > model.dailyRateLKR
                           ? `${displayAmount(model.dailyRateLKR)} - ${displayAmount(model.dailyRateMaxLKR)}/day`
                           : `${displayAmount(model.dailyRateLKR)}/day`}
                       </option>

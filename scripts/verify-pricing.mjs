@@ -33,7 +33,7 @@ const cases = [
   ['yamaha-zr', '2026-11-16', '2026-11-20', false, 5400,  'ZR 4 days: 6000 - 10%'],
   ['yamaha-fz', '2026-11-01', '2026-12-01', false, 30000, 'FZ 30 days: monthly 30000/30*30'],
   ['yamaha-125', '2026-11-01', '2026-12-01', false, 67500,'Yamaha 125 30 days: NO monthly -> daily, was the LKR 0 bug'],
-  ['zoom-110', '2026-11-01', '2026-12-01', false, 54000, 'Zoom 110 30 days: NO monthly -> daily'],
+  ['zoom-110', '2026-11-01', '2026-12-01', false, 67500, 'Zoom 110 30 days: NO monthly -> daily, 10% long-stay off'],
   ['tvs-ntorq', '2026-11-16', '2026-11-20', false, 9000,  'Ntorq 4 days: 10000 - 10%'],
   ['yamaha-zr-street-rally', '2026-11-16', '2026-11-17', false, 2000, 'Street Rally 1 day: no discount'],
   ['yamaha-zr', '2026-11-16', '2026-11-19', true, 6000,  'ZR 3 days + outside area: 4500 + 1500'],
@@ -51,6 +51,6 @@ for (const [id, s, e, oa, expected, label] of cases) {
 console.log(`\n${pass} passed, ${fail} failed`);
 console.log('\nDropdown labels:');
 for (const m of BIKE_MODELS) {
-  console.log(`  ${m.name} - LKR ${m.dailyRateLKR.toLocaleString()}${m.dailyRateMaxLKR ? ` - LKR ${m.dailyRateMaxLKR.toLocaleString()}` : ''}/day`);
+  console.log(`  ${m.name} - LKR ${m.dailyRateLKR.toLocaleString()}${m.dailyRateMaxLKR && m.dailyRateMaxLKR > m.dailyRateLKR ? ` - LKR ${m.dailyRateMaxLKR.toLocaleString()}` : ''}/day`);
 }
 process.exit(fail ? 1 : 0);
