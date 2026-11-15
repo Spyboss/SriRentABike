@@ -41,8 +41,8 @@ export const BIKE_MODELS: BikeModel[] = [
   {
     id: 'zoom-110',
     name: 'Zoom 110cc',
-    dailyRateLKR: 2000,
-    dailyRateMaxLKR: 2300,
+    dailyRateLKR: 2500,
+    dailyRateMaxLKR: 2500,
     monthlyRateLKR: 0, // No monthly package: 30+ days bill at the daily rate
   },
   {
