@@ -4,7 +4,7 @@
   "description": "Backend API for SriRentABike digital rental agreement system",
   "main": "dist/server.js",
   "engines": {
-    "node": "24.x"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "nodemon src/server.ts",
