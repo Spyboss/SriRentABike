@@ -72,9 +72,18 @@ app.use('/api/pdf', pdfRoutes);
 app.use('/api/bikes', bikesRoutes);
 app.use('/api/settings', settingsRoutes);
 
-// Health check
+// Health check. `node` and `commit` are operational truth: which runtime
+// Nixpacks actually picked up (the .nvmrc/engines pin) and which deploy is
+// serving, so a stuck or superseded deploy is visible from one curl.
 app.get('/api/health', (req: express.Request, res: express.Response) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    node: process.version,
+    ...(process.env.RAILWAY_GIT_COMMIT_SHA
+      ? { commit: process.env.RAILWAY_GIT_COMMIT_SHA.slice(0, 7) }
+      : {}),
+  });
 });
 
 // Error handling middleware
