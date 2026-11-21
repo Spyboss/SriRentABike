@@ -83,6 +83,12 @@ app.get('/api/health', (req: express.Request, res: express.Response) => {
     ...(process.env.RAILWAY_GIT_COMMIT_SHA
       ? { commit: process.env.RAILWAY_GIT_COMMIT_SHA.slice(0, 7) }
       : {}),
+    // Builder-level overrides, if any: explains why file-based pins
+    // (.nvmrc / engines) may or may not decide the runtime.
+    ...(process.env.NIXPACKS_NODE_VERSION
+      ? { nixpacksNodeVersion: process.env.NIXPACKS_NODE_VERSION }
+      : {}),
+    ...(process.env.NODE_VERSION ? { nodeVersionEnv: process.env.NODE_VERSION } : {}),
   });
 });
 
