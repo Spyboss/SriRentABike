@@ -53,14 +53,18 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
       throw touristError;
     }
 
-    // Create agreement
+    // Create agreement. The tourist signs inline on /rent (the schema makes
+    // `signature` required), so there is nothing left to wait for: the
+    // agreement is born at 'signed', the same state a guest-link submission
+    // lands in. Creating it at 'pending' would park every online booking on
+    // the dashboard's "awaiting signature" card forever.
     const agreementNo = `SRI-${Date.now().toString().slice(-6)}`;
     const { data: agreement, error: agreementError } = await supabase
       .from('agreements')
       .insert([{
         agreement_no: agreementNo,
         tourist_id: tourist.id,
-        status: 'pending',
+        status: 'signed',
         signature_url: signatureUrl,
         signed_at: new Date().toISOString(),
         start_date: start_date || new Date().toISOString().split('T')[0],
@@ -94,7 +98,7 @@ router.post('/', validateRequest(createAgreementSchema), async (req: express.Req
     res.json({
       agreement_id: agreement.id,
       agreement_no: agreementNo,
-      status: 'pending'
+      status: 'signed'
     });
 
   } catch (error) {

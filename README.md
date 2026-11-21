@@ -113,6 +113,7 @@ FRONTEND_URL=http://localhost:5173
    - `api/supabase/migrations/20241201_initial_schema.sql`
    - `api/supabase/migrations/20241212_admin_controls.sql`
    - `api/supabase/migrations/20250104_add_requested_model.sql`
+   - `api/supabase/migrations/20261115_rental_lifecycle.sql`
 3. Create the public storage bucket automatically:
    ```bash
    cd api
