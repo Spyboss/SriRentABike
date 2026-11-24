@@ -111,7 +111,8 @@ export interface UpdateAgreementRequest {
   daily_rate?: number;
   total_amount?: number;
   deposit?: number;
-  status?: AgreementStatus;
+  // `status` is deliberately absent: it only moves through
+  // POST /agreements/:id/status, which carries the side effects.
   payment_status?: PaymentStatus;
   amount_paid?: number;
 }

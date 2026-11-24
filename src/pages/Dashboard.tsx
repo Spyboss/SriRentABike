@@ -19,6 +19,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { pdfAPI, agreementsAPI } from '../services/api';
+import { todayISO, dateOnly, parseDateOnly } from '../lib/utils';
 
 import { Navbar } from '../components/Navbar';
 
@@ -56,14 +57,16 @@ export const Dashboard: React.FC = () => {
   }, [user, navigate, fetchAgreements, debouncedSearchTerm, statusFilter]);
 
   // Owner's questions, computed from the lifecycle. Overdue is derived
-  // (active AND past end date), never a stored status.
-  const today = new Date().toDateString();
+  // (active AND past end date), never a stored status. Dates are compared as
+  // 'YYYY-MM-DD' strings: parsing them as Date would put a date-only value
+  // at UTC midnight and shift the comparison to the wrong local day.
+  const today = todayISO();
   const isOverdue = (a: Agreement) =>
-    a.status === 'active' && !!a.end_date && new Date(a.end_date) < new Date(today);
+    a.status === 'active' && !!a.end_date && dateOnly(a.end_date) < today;
   const stats = {
     outNow: agreements.filter((a) => a.status === 'active').length,
     overdue: agreements.filter(isOverdue).length,
-    startingToday: agreements.filter((a) => a.start_date && new Date(a.start_date).toDateString() === today).length,
+    startingToday: agreements.filter((a) => !!a.start_date && dateOnly(a.start_date) === today).length,
     awaitingSignature: agreements.filter((a) => a.status === 'pending').length,
   };
 
@@ -337,7 +340,7 @@ export const Dashboard: React.FC = () => {
                         <div>{agreement.bike ? `${agreement.bike.model} • ${agreement.bike.plate_no}` : 'Not assigned'}</div>
                         <div className="text-xs text-stone-400">
                           {agreement.start_date && agreement.end_date
-                            ? `${new Date(agreement.start_date).toLocaleDateString()} – ${new Date(agreement.end_date).toLocaleDateString()}`
+                            ? `${parseDateOnly(agreement.start_date).toLocaleDateString()} – ${parseDateOnly(agreement.end_date).toLocaleDateString()}`
                             : ''}
                         </div>
                       </td>
@@ -381,7 +384,7 @@ export const Dashboard: React.FC = () => {
                       <div className="text-stone-500">Contact: <span className="text-stone-900 font-medium">{agreement.tourist_data?.phone_number}</span></div>
                       <div className="text-stone-500 col-span-2">Dates: <span className="text-stone-900 font-medium">
                         {agreement.start_date && agreement.end_date
-                          ? `${new Date(agreement.start_date).toLocaleDateString()} – ${new Date(agreement.end_date).toLocaleDateString()}`
+                          ? `${parseDateOnly(agreement.start_date).toLocaleDateString()} – ${parseDateOnly(agreement.end_date).toLocaleDateString()}`
                           : 'Not set'}
                       </span></div>
                     </div>

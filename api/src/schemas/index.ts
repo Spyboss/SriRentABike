@@ -63,8 +63,10 @@ export const updateAgreementSchema = Joi.object({
   // validateRequest strips unknown keys, so without this it was silently dropped.
   total_amount: Joi.number().min(0).optional(),
   deposit: Joi.number().min(0).optional(),
-  // Must match the CHECK constraint on agreements.status in the initial schema.
-  status: Joi.string().valid('pending', 'signed', 'active', 'completed').optional(),
+  // No `status` here on purpose: status only moves through POST /:id/status,
+  // which carries the bike-availability and timestamp side effects with it.
+  // validateRequest strips unknown keys, so a PUT carrying status is a no-op
+  // rather than a bypass.
   payment_status: Joi.string().valid('unpaid', 'partial', 'paid').optional(),
   amount_paid: Joi.number().min(0).optional(),
 }).messages({

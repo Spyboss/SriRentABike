@@ -56,7 +56,10 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: config.rateLimitWindowMs,
   max: config.rateLimitMaxRequests,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  // Uptime probes hit /api/health on their own schedule; they must not eat
+  // the request budget the admin UI and guests run on.
+  skip: (req: express.Request) => req.path === '/api/health'
 });
 app.use(limiter);
 

@@ -185,9 +185,11 @@ npm run build
 ### Agreements
 - `GET /api/agreements` - List all agreements (admin)
 - `GET /api/agreements/:id` - Get specific agreement (admin)
-- `POST /api/agreements` - Create new agreement (guest)
+- `POST /api/agreements` - Create new agreement (guest, signs inline on /rent)
+- `POST /api/agreements/admin` - Create agreement for a phone/WhatsApp booking, returns `guest_token` (admin)
+- `POST /api/agreements/:id/status` - Advance lifecycle status, forward only (admin)
 - `PUT /api/agreements/:id` - Update agreement (admin)
-- `DELETE /api/agreements/:id` - Delete agreement (admin)
+- `DELETE /api/agreements/:id` - Delete agreement (admin, releases its bike)
 - `GET /api/agreements/:id/audit` - Agreement audit events (admin)
 - `GET /api/agreements/public/:reference` - Public agreement status
 
@@ -195,7 +197,7 @@ npm run build
 - `POST /api/guest-links` - Create guest access link (admin)
 - `GET /api/guest-links/validate/:token` - Validate guest token
 - `GET /api/guest-links/agreement/:token` - Agreement details by token
-- `POST /api/guest-links/use/:token` - Mark token as used
+- `POST /api/guest-links/submit/:token` - Guest submits the signed agreement (public)
 
 ### PDF
 - `POST /api/pdf/generate/:agreementId` - Generate agreement PDF (admin)

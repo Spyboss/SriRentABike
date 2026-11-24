@@ -115,63 +115,6 @@ router.get('/agreement/:token', async (req: express.Request, res: express.Respon
   }
 });
 
-// Mark guest link as used
-router.post('/use/:token', async (req: express.Request, res: express.Response) => {
-  try {
-    const { token } = req.params;
-
-    const { data: guestLink, error } = await supabase
-      .from('guest_links')
-      .select('*')
-      .eq('token', token)
-      .single();
-
-    if (error || !guestLink) {
-      return res.status(404).json({ error: 'Invalid guest link' });
-    }
-
-    // Check if link is expired
-    const now = new Date();
-    const expiresAt = new Date(guestLink.expires_at);
-    
-    if (now > expiresAt) {
-      await supabase
-        .from('guest_links')
-        .update({ status: 'expired' })
-        .eq('id', guestLink.id);
-
-      return res.status(410).json({ error: 'Guest link has expired' });
-    }
-
-    // Check if link has been used
-    if (guestLink.used_count >= guestLink.max_uses) {
-      return res.status(410).json({ error: 'Guest link has already been used' });
-    }
-
-    // Update usage count
-    const newUsedCount = guestLink.used_count + 1;
-    const newStatus = newUsedCount >= guestLink.max_uses ? 'used' : 'active';
-
-    await supabase
-      .from('guest_links')
-      .update({ 
-        used_count: newUsedCount,
-        status: newStatus
-      })
-      .eq('id', guestLink.id);
-
-    res.json({ 
-      message: 'Guest link usage updated',
-      used_count: newUsedCount,
-      status: newStatus
-    });
-
-  } catch (error) {
-    console.error('Use guest link error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // Submit a signed agreement through a guest link (public).
 //
 // This writes back onto the agreement the link points at. It used to be
@@ -233,6 +176,14 @@ router.post('/submit/:token', async (req: express.Request, res: express.Response
       return res.status(404).json({ error: 'Agreement not found' });
     }
 
+    // Only a booking still waiting for a signature may be signed through a
+    // link. Once it is signed, active or completed this token is stale, and
+    // letting it through would rewrite dates, rates and the signature on a
+    // rental that is already settled or on the road.
+    if (agreement.status !== 'pending') {
+      return res.status(409).json({ error: 'This agreement has already been signed' });
+    }
+
     // Upload the signature
     const signatureBuffer = Buffer.from(String(signature).split(',')[1], 'base64');
     const signatureFileName = `signatures/${uuidv4()}.png`;
@@ -268,9 +219,9 @@ router.post('/submit/:token', async (req: express.Request, res: express.Response
     // the owner and the tourist, and a guest edit must not wipe it.
     if (typeof daily_rate === 'number') agreementUpdate.daily_rate = daily_rate;
     if (typeof total_amount === 'number') agreementUpdate.total_amount = total_amount;
-    // Signing moves the booking forward. If the admin already handed the bike
-    // over there is nothing to undo, so only advance out of 'pending'.
-    if (agreement.status === 'pending') agreementUpdate.status = 'signed';
+    // The guard above guarantees we are still 'pending', so signing advances
+    // the booking to 'signed' in the same write that records the signature.
+    agreementUpdate.status = 'signed';
 
     const { data: updated, error: updateError } = await supabase
       .from('agreements')
@@ -330,10 +281,41 @@ router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: 
       .from('agreements')
       .select('id, status')
       .eq('id', agreement_id)
+      .is('deleted_at', null)
       .single();
 
     if (agreementErr || !agreement) {
       return res.status(404).json({ error: 'Agreement not found' });
+    }
+
+    // A signing link only exists to collect a signature. Minting one for an
+    // agreement that has moved past 'pending' hands out a token that could
+    // rewrite dates, rates and the signature on a rental that is already
+    // signed, on the road, or finished.
+    if (agreement.status !== 'pending') {
+      return res.status(409).json({ error: 'This agreement has already been signed' });
+    }
+
+    // Reuse an unexpired active link rather than stacking a new token on
+    // every click: each extra token is a stale link that outlives its
+    // purpose and sits in someone's WhatsApp forever.
+    const { data: activeLinks } = await supabase
+      .from('guest_links')
+      .select('token, expires_at, status')
+      .eq('agreement_id', agreement_id)
+      .eq('status', 'active')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const existing = activeLinks && activeLinks.length > 0 ? activeLinks[0] : null;
+    if (existing) {
+      return res.json({
+        token: existing.token,
+        expires_at: existing.expires_at,
+        status: existing.status,
+        agreement_id
+      });
     }
 
     const token = uuidv4();

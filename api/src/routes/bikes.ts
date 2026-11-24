@@ -116,13 +116,19 @@ router.post('/:id/archive', authenticateToken, requireAdmin, async (req: AuthReq
 router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params
-    const { data: refs } = await supabase
+    // Any agreement still holding this bike blocks the delete — including
+    // 'active', which the old guard missed: the FK is ON DELETE SET NULL, so
+    // deleting under an active rental silently stripped the rental's bike.
+    // Soft-deleted agreements are ignored; they released the bike already.
+    const { data: refs, error: refsError } = await supabase
       .from('agreements')
       .select('id,status')
       .eq('bike_id', id)
-      .in('status', ['pending', 'signed'])
+      .is('deleted_at', null)
+      .in('status', ['pending', 'signed', 'active'])
+    if (refsError) throw refsError
     if (refs && refs.length > 0) {
-      return res.status(400).json({ error: 'Bike is referenced by active agreements' })
+      return res.status(400).json({ error: 'Bike is assigned to an agreement that has not been returned' })
     }
     const { error } = await supabase
       .from('bikes')

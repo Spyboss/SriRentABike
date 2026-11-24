@@ -226,6 +226,7 @@ router.get('/public/:reference', async (req: express.Request, res: express.Respo
         )
       `)
       .eq('agreement_no', reference)
+      .is('deleted_at', null)
       .single();
 
     if (error || !agreement) {
@@ -255,6 +256,47 @@ router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: e
   try {
     const { page = 1, limit = 20, search, status, start_date, end_date } = req.query;
 
+    // PostgREST refuses embedded-table columns inside or() — a filter like
+    // `tourists.first_name.ilike.%x%` returns 400 for the whole request,
+    // which is what made dashboard search fail on every keystroke. The
+    // tourist side is therefore matched here, in memory: a name is usually
+    // typed as one phrase ("Francis Finders") spanning first_name and
+    // last_name, and the box promises email too — neither can be expressed
+    // in a single PostgREST or(). Only the matching ids cross into the
+    // agreement query.
+    let searchClause: string | null = null;
+    if (search) {
+      const term = String(search).trim().toLowerCase();
+      if (term) {
+        const { data: tourists, error: touristSearchError } = await supabase
+          .from('tourists')
+          .select('id, first_name, last_name, passport_no, email')
+          .limit(5000);
+        if (touristSearchError) {
+          throw touristSearchError;
+        }
+        const ids = (tourists ?? [])
+          .filter((t: { first_name: string; last_name: string; passport_no: string; email: string }) =>
+            [t.first_name, t.last_name, t.passport_no, t.email]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase()
+              .includes(term))
+          .map((t: { id: string }) => t.id);
+
+        // Commas and parentheses are syntax inside an or() tree; strip them
+        // from the agreement-number side so a value containing them cannot
+        // break the filter.
+        const noTerm = String(search).replace(/[()",]/g, ' ').replace(/\s+/g, ' ').trim();
+        const clauses: string[] = [];
+        if (noTerm) clauses.push(`agreement_no.ilike.%${noTerm}%`);
+        if (ids.length > 0) clauses.push(`tourist_id.in.(${ids.join(',')})`);
+        // Never an empty or(): a search that matches nothing must return
+        // nothing, not everything.
+        searchClause = clauses.length > 0 ? clauses.join(',') : 'agreement_no.is.null';
+      }
+    }
+
     let query = supabase
       .from('agreements')
       .select(`
@@ -271,8 +313,8 @@ router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: e
       query = query.eq('status', status);
     }
 
-    if (search) {
-      query = query.or(`agreement_no.ilike.%${search}%,tourists.first_name.ilike.%${search}%,tourists.last_name.ilike.%${search}%,tourists.passport_no.ilike.%${search}%`);
+    if (searchClause) {
+      query = query.or(searchClause);
     }
 
     if (start_date) {
@@ -293,10 +335,27 @@ router.get('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: e
       throw error;
     }
 
-    // Get total count for pagination
-    const { count, error: countError } = await supabase
+    // Total is counted over the same filtered set. Counting everything (as it
+    // used to) meant soft-deleted rows and out-of-search rows inflated the
+    // page count, so the last page came back empty.
+    let countQuery = supabase
       .from('agreements')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null);
+    if (status) {
+      countQuery = countQuery.eq('status', status);
+    }
+    if (searchClause) {
+      countQuery = countQuery.or(searchClause);
+    }
+    if (start_date) {
+      countQuery = countQuery.gte('start_date', start_date);
+    }
+    if (end_date) {
+      countQuery = countQuery.lte('end_date', end_date);
+    }
+
+    const { count, error: countError } = await countQuery;
 
     if (countError) {
       throw countError;
@@ -354,6 +413,10 @@ router.get('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
 router.put('/:id', authenticateToken, requireAdmin, validateRequest(updateAgreementSchema), async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
+    // `status` is absent by design: updateAgreementSchema does not accept it
+    // (validate strips unknown keys), so a PUT can never skip the lifecycle
+    // endpoint below and its side effects — bike availability, timestamps,
+    // audit trail.
     const updates: UpdateAgreementRequest = req.body;
 
     // If assigning a bike, update bike availability
@@ -548,50 +611,78 @@ router.post('/:id/status', authenticateToken, requireAdmin, async (req: AuthRequ
   }
 });
 
-// Soft delete agreement (admin)
+// Soft delete agreement (admin).
+//
+// Deleting has to take the bike with it. A pending or signed agreement can
+// already hold an assigned bike (marked 'rented'), and without releasing it
+// here the bike stayed 'rented' forever with no agreement left to ever
+// return it. A rental that is physically out with a customer is refused
+// outright: finish it first, then delete.
 router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
     const { id } = req.params;
     const now = new Date().toISOString();
-    const { data: agreement, error } = await supabase
+
+    const { data: current, error: fetchError } = await supabase
+      .from('agreements')
+      .select('id, status, bike_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Agreement not found' });
+      }
+      throw fetchError;
+    }
+
+    if (current.status === 'active') {
+      return res.status(409).json({
+        error: 'This rental is out with a customer. Mark it returned before deleting.'
+      });
+    }
+
+    // Soft delete; hard delete only as a fallback for a database where the
+    // deleted_at column itself is missing (un-migrated environment).
+    let deleted: unknown = null;
+    const { data: softDeleted, error } = await supabase
       .from('agreements')
       .update({ deleted_at: now, updated_at: now })
       .eq('id', id)
       .select()
       .single();
+
     if (error) {
       const code = (error as import('@supabase/supabase-js').PostgrestError | { code?: string })?.code;
-      if (code === 'PGRST116') {
-        return res.status(404).json({ error: 'Agreement not found' });
-      }
       const message = (error as { message?: string })?.message || '';
       const missingDeletedAt =
         code === '42703' ||
         /deleted_at/i.test(message) && /(column|schema cache)/i.test(message);
-      if (missingDeletedAt) {
-        const { data: hardDeleted, error: hardDeleteError } = await supabase
-          .from('agreements')
-          .delete()
-          .eq('id', id)
-          .select()
-          .single();
-        if (hardDeleteError) throw hardDeleteError;
-        try {
-          await supabase
-            .from('audit_events')
-            .insert([{
-              actor: req.user!.email,
-              action: 'delete_agreement',
-              agreement_id: id,
-              timestamp: now
-            }]);
-        } catch (auditError) {
-          console.error('Delete agreement audit error:', auditError);
-        }
-        return res.json({ agreement: hardDeleted });
+      if (!missingDeletedAt) {
+        throw error;
       }
-      throw error;
+      const { data: hardDeleted, error: hardDeleteError } = await supabase
+        .from('agreements')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
+      if (hardDeleteError) throw hardDeleteError;
+      deleted = hardDeleted;
+    } else {
+      deleted = softDeleted;
     }
+
+    // Hand the bike back to the fleet. 'active' was rejected above and a
+    // 'completed' rental already released it on return, so this covers the
+    // pending/signed rows that can still be holding one.
+    if (current.bike_id && current.status !== 'completed') {
+      await supabase
+        .from('bikes')
+        .update({ availability_status: 'available' })
+        .eq('id', current.bike_id);
+    }
+
     try {
       await supabase
         .from('audit_events')
@@ -604,7 +695,8 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, 
     } catch (auditError) {
       console.error('Delete agreement audit error:', auditError);
     }
-    res.json({ agreement });
+
+    res.json({ agreement: deleted });
   } catch (error) {
     console.error('Delete agreement error:', error);
     res.status(500).json({ error: 'Internal server error' });

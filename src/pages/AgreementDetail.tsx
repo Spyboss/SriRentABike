@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { useBikesStore } from '@/stores/bikes';
+import { todayISO, dateOnly, parseDateOnly } from '@/lib/utils';
 
 interface Agreement {
   id: string;
@@ -303,7 +304,10 @@ export const AgreementDetail: React.FC = () => {
     setIsCopyingLink(true);
     try {
       const resp = await guestLinksAPI.create(id);
-      const token = resp.data?.guest_token as string | undefined;
+      // POST /guest-links answers with `token` (POST /agreements/admin, which
+      // mints its own link inline, is the one that answers with
+      // `guest_token`). Reading the wrong field made this button always fail.
+      const token = resp.data?.token as string | undefined;
       if (!token) throw new Error('No token returned');
       await navigator.clipboard.writeText(guestLinkUrl(token));
       alert('Signing link copied. Paste it into WhatsApp.');
@@ -319,6 +323,12 @@ export const AgreementDetail: React.FC = () => {
 
   const handleSavePayment = async () => {
     if (!id) return;
+    // An emptied-out field means "no amount typed", not "nothing received":
+    // saving it as 0 would silently wipe a previously recorded amount.
+    if (payAmount === '') {
+      alert('Enter the amount received');
+      return;
+    }
     setIsSavingPayment(true);
     try {
       await agreementsAPI.update(id, {
@@ -378,7 +388,7 @@ export const AgreementDetail: React.FC = () => {
   const isOverdue =
     agreement?.status === 'active' &&
     !!agreement.end_date &&
-    new Date(agreement.end_date) < new Date(new Date().toDateString());
+    dateOnly(agreement.end_date) < todayISO();
 
   // The next legal move in the lifecycle. null = nothing to advance to.
   const nextAction: { to: 'signed' | 'active' | 'completed'; label: string; icon: LucideIcon } | null =
@@ -464,7 +474,7 @@ export const AgreementDetail: React.FC = () => {
               </div>
               <p className="text-stone-500 text-sm flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                {agreement.agreement_no} · {startDate ? new Date(startDate).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '?'} – {endDate ? new Date(endDate).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '?'}
+                {agreement.agreement_no} · {startDate ? parseDateOnly(startDate).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '?'} – {endDate ? parseDateOnly(endDate).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '?'}
               </p>
             </div>
           </div>
