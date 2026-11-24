@@ -25,7 +25,7 @@ import { Navbar } from '../components/Navbar';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   const { agreements, isLoading, error, fetchAgreements } = useAgreementsStore();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +44,9 @@ export const Dashboard: React.FC = () => {
   }, [searchTerm]);
 
   useEffect(() => {
+    // Wait for the session restore: user is null on the first paint even
+    // with a valid token, and redirecting here would log the owner out.
+    if (!isHydrated) return;
     // Check if user is authenticated
     if (!user) {
       navigate('/login');
@@ -54,7 +57,7 @@ export const Dashboard: React.FC = () => {
       search: debouncedSearchTerm || undefined,
       status: statusFilter === 'all' ? undefined : statusFilter
     });
-  }, [user, navigate, fetchAgreements, debouncedSearchTerm, statusFilter]);
+  }, [isHydrated, user, navigate, fetchAgreements, debouncedSearchTerm, statusFilter]);
 
   // Owner's questions, computed from the lifecycle. Overdue is derived
   // (active AND past end date), never a stored status. Dates are compared as

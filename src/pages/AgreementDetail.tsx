@@ -66,7 +66,7 @@ interface Agreement {
 export const AgreementDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
   
   const [agreement, setAgreement] = useState<Agreement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,6 +183,8 @@ export const AgreementDetail: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
+    // Wait for the session restore before deciding there is no user.
+    if (!isHydrated) return;
     if (!user) {
       navigate('/login');
       return;
@@ -190,7 +192,7 @@ export const AgreementDetail: React.FC = () => {
 
     fetchAgreement();
     fetchAvailable();
-  }, [fetchAgreement, user, navigate, fetchAvailable]);
+  }, [isHydrated, fetchAgreement, user, navigate, fetchAvailable]);
 
   const handleUpdateBike = async () => {
     if (!id || !agreement) return;

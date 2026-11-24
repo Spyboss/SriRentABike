@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useAuthStore } from "./stores/auth";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { AgreementDetail } from "./pages/AgreementDetail";
@@ -13,6 +15,16 @@ import PricingManagement from "@/pages/PricingManagement";
 import NotFound from "@/pages/NotFound";
 
 export default function App() {
+  // Restore the session on a full page load. checkAuth reads the token that
+  // the request interceptor already sends; without it, user stayed null after
+  // every refresh and the admin guard bounced the owner to /login despite a
+  // valid token — so a reload mid-task (or a shared link) always logged him out.
+  const checkAuth = useAuthStore((s) => s.checkAuth);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <Router>
       <Routes>

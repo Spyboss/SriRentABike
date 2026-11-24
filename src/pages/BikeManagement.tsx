@@ -10,7 +10,7 @@ import { Navbar } from '@/components/Navbar';
 
 export default function BikeManagement() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const { bikes, isLoading, error, fetchAll, createBike, updateBike, clearError } = useBikesStore();
   const [filter, setFilter] = useState<'all' | 'available' | 'rented' | 'maintenance'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,6 +28,10 @@ export default function BikeManagement() {
   const [priceModels, setPriceModels] = useState<BikeModel[]>(BIKE_MODELS);
 
   useEffect(() => {
+    // Wait for the session restore: on the first paint user is still null
+    // even with a valid token, and redirecting here would log the owner out
+    // on every page load.
+    if (!isHydrated) return;
     if (!user) {
       navigate('/login');
       return;
@@ -38,7 +42,7 @@ export default function BikeManagement() {
     }).catch(() => {
       // Keep the code defaults — /settings/pricing is unreachable.
     });
-  }, [user, navigate, fetchAll]);
+  }, [isHydrated, user, navigate, fetchAll]);
 
   const filtered = bikes.filter((b) => {
     const matchesStatus = filter === 'all' ? true : b.availability_status === filter;

@@ -395,8 +395,15 @@ export class PDFService {
   }
 
   async generatePDF(data: PDFData): Promise<Buffer> {
+    // Puppeteer's bundled Chromium is not always present (e.g. slim Linux
+    // images and local dev boxes). Allow the runtime to point at a system
+    // Chrome/Chromium via PUPPETEER_EXECUTABLE_PATH so PDF generation works
+    // both locally and on deploy without bundling a ~170MB browser download.
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+
     const browser = await puppeteer.launch({
       headless: 'new',
+      executablePath,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 

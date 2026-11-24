@@ -26,7 +26,7 @@ import {
 // signs at /rent/:token, writing back onto this same agreement.
 export default function NewAgreement() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isHydrated } = useAuthStore();
 
   const [bikeModels, setBikeModels] = useState<BikeModel[]>(BIKE_MODELS);
   const [pricingRules, setPricingRules] = useState(PRICING_RULES);
@@ -56,6 +56,8 @@ export default function NewAgreement() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    // Wait for the session restore before deciding there is no user.
+    if (!isHydrated) return;
     if (!user) {
       navigate('/login');
       return;
@@ -66,7 +68,7 @@ export default function NewAgreement() {
     }).catch(() => {
       // Keep the code defaults — /settings/pricing is unreachable.
     });
-  }, [user, navigate]);
+  }, [isHydrated, user, navigate]);
 
   const selectedModel = useMemo(
     () => bikeModels.find((m) => m.id === selectedModelId) || bikeModels[0],
