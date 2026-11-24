@@ -243,7 +243,9 @@ export const AgreementDetail: React.FC = () => {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Failed to download PDF:', error);
-      alert('Failed to download PDF');
+      const reason =
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error;
+      alert(reason || 'Failed to download PDF');
     }
   };
   
@@ -263,7 +265,12 @@ export const AgreementDetail: React.FC = () => {
       await fetchAgreement();
     } catch (error) {
       console.error('Failed to generate PDF:', error);
-      alert('Failed to generate PDF');
+      // Surface the backend's reason (e.g. "assign a bike" / "no signature")
+      // instead of a generic failure — the old generic message is why PDF
+      // felt broken: the owner had no idea the bike was the blocker.
+      const reason =
+        (error as { response?: { data?: { error?: string } } }).response?.data?.error;
+      alert(reason || 'Failed to generate PDF');
     }
   };
 
