@@ -30,8 +30,8 @@ const setA = new Set(a.map(key));
 const setB = new Set(b.map(key));
 
 let ok = true;
-if (a.length !== 6) { console.log(`FAIL frontend has ${a.length} models, expected 6`); ok = false; }
-if (b.length !== 6) { console.log(`FAIL backend has ${b.length} models, expected 6`); ok = false; }
+if (a.length !== 7) { console.log(`FAIL frontend has ${a.length} models, expected 7`); ok = false; }
+if (b.length !== 7) { console.log(`FAIL backend has ${b.length} models, expected 7`); ok = false; }
 for (const k of setA) if (!setB.has(k)) { console.log(`FAIL only in frontend: ${k}`); ok = false; }
 for (const k of setB) if (!setA.has(k)) { console.log(`FAIL only in backend:  ${k}`); ok = false; }
 

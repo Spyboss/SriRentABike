@@ -24,7 +24,6 @@ export interface PDFData {
   };
   bike: {
     model: string;
-    frame_no: string;
     plate_no: string;
   };
 }
@@ -303,13 +302,11 @@ export class PDFService {
               <tr>
                 <th>PLATE NO</th>
                 <th>ENGINE NO</th>
-                <th>CHASSIS NO</th>
                 <th>OPTIONS</th>
               </tr>
               <tr>
                 <td>${data.bike.plate_no}</td>
                 <td>-</td>
-                <td>${data.bike.frame_no}</td>
                 <td>HELMET<br>DOCUMENTS<br>FUEL TANK</td>
               </tr>
             </table>

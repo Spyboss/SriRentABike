@@ -111,9 +111,9 @@ export const pdfAPI = {
 export const bikesAPI = {
   list: () => api.get('/bikes'),
   available: () => api.get('/bikes/available'),
-  create: (data: { model: string; frame_no: string; plate_no: string; availability_status?: 'available' | 'rented' | 'maintenance' }) =>
+  create: (data: { model: string; plate_no: string; availability_status?: 'available' | 'rented' | 'maintenance' }) =>
     api.post('/bikes', data),
-  update: (id: string, data: Partial<{ model: string; frame_no: string; plate_no: string; availability_status: 'available' | 'rented' | 'maintenance' }>) =>
+  update: (id: string, data: Partial<{ model: string; plate_no: string; availability_status: 'available' | 'rented' | 'maintenance' }>) =>
     api.put(`/bikes/${id}`, data),
   archive: (id: string) => api.post(`/bikes/${id}/archive`)
 }

@@ -9,20 +9,18 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 // Create bike (admin)
 router.post('/', authenticateToken, requireAdmin, async (req: AuthRequest, res: express.Response) => {
   try {
-    const { model, frame_no, plate_no, availability_status } = req.body as {
+    const { model, plate_no, availability_status } = req.body as {
       model?: string
-      frame_no?: string
       plate_no?: string
       availability_status?: 'available' | 'rented' | 'maintenance'
     }
-    if (!model || !frame_no || !plate_no) {
-      return res.status(400).json({ error: 'model, frame_no and plate_no are required' })
+    if (!model || !plate_no) {
+      return res.status(400).json({ error: 'model and plate_no are required' })
     }
     const { data, error } = await supabase
       .from('bikes')
       .insert([{
         model,
-        frame_no,
         plate_no,
         availability_status: availability_status || 'available'
       }])
@@ -59,7 +57,6 @@ router.put('/:id', authenticateToken, requireAdmin, async (req: AuthRequest, res
     const { id } = req.params
     const updates = req.body as {
       model?: string
-      frame_no?: string
       plate_no?: string
       availability_status?: 'available' | 'rented' | 'maintenance'
     }

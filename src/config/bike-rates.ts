@@ -52,6 +52,13 @@ export const BIKE_MODELS: BikeModel[] = [
     dailyRateMaxLKR: 3500,
     monthlyRateLKR: 30000, // $100 @ 300 LKR/USD
   },
+  {
+    id: 'honda-dio',
+    name: 'Honda Dio',
+    dailyRateLKR: 2500,
+    dailyRateMaxLKR: 3000,
+    monthlyRateLKR: 0, // No monthly package: 30+ days bill at the daily rate
+  },
 ];
 
 export const PRICING_RULES = {

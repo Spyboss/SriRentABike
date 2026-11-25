@@ -22,7 +22,6 @@ export interface Tourist {
 export interface Bike {
   id: string;
   model: string;
-  frame_no: string;
   plate_no: string;
   availability_status: 'available' | 'rented' | 'maintenance';
   created_at: string;

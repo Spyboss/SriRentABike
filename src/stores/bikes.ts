@@ -4,7 +4,6 @@ import { bikesAPI } from '@/services/api';
 export interface Bike {
   id: string;
   model: string;
-  frame_no: string;
   plate_no: string;
   availability_status: 'available' | 'rented' | 'maintenance';
   created_at: string;
@@ -56,7 +55,6 @@ export const useBikesStore = create<BikesState>((set, get) => ({
     try {
       await bikesAPI.create({
         model: data.model,
-        frame_no: data.frame_no,
         plate_no: data.plate_no,
         availability_status: data.availability_status
       });

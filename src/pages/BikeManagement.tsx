@@ -16,7 +16,7 @@ export default function BikeManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ model: '', frame_no: '', plate_no: '', availability_status: 'available' as 'available' | 'rented' | 'maintenance' });
+  const [form, setForm] = useState({ model: '', plate_no: '', availability_status: 'available' as 'available' | 'rented' | 'maintenance' });
   const [color, setColor] = useState<string>('');
   const [specs, setSpecs] = useState<string>('');
   const [docs, setDocs] = useState<FileList | null>(null);
@@ -48,13 +48,13 @@ export default function BikeManagement() {
     const matchesStatus = filter === 'all' ? true : b.availability_status === filter;
     const matchesSearch = !searchTerm
       ? true
-      : [b.model, b.frame_no, b.plate_no].some((f) => f.toLowerCase().includes(searchTerm.toLowerCase()));
+      : [b.model, b.plate_no].some((f) => f.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
 
   const startCreate = () => {
     setEditingId(null);
-    setForm({ model: '', frame_no: '', plate_no: '', availability_status: 'available' });
+    setForm({ model: '', plate_no: '', availability_status: 'available' });
     setColor('#ffffff');
     setSpecs('');
     setDocs(null);
@@ -67,7 +67,7 @@ export default function BikeManagement() {
     const b = bikes.find((x) => x.id === id);
     if (!b) return;
     setEditingId(id);
-    setForm({ model: b.model, frame_no: b.frame_no, plate_no: b.plate_no, availability_status: b.availability_status });
+    setForm({ model: b.model, plate_no: b.plate_no, availability_status: b.availability_status });
     clearError();
     setShowForm(true);
     bikeMetaAPI.get(id).then(r => {
@@ -89,7 +89,7 @@ export default function BikeManagement() {
         }
       } else {
         await createBike(form);
-        const created = bikes.find(b => b.frame_no === form.frame_no && b.plate_no === form.plate_no);
+        const created = bikes.find(b => b.plate_no === form.plate_no);
         if (created) {
           await bikeMetaAPI.put(created.id, { color, specs });
           if (docs && docs.length) {
@@ -165,7 +165,7 @@ export default function BikeManagement() {
               <input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by model, frame or plate..."
+                placeholder="Search by model or plate..."
                 className="w-full pl-12 pr-4 py-3.5 rounded-xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all min-h-[48px]"
               />
             </div>
@@ -217,8 +217,8 @@ export default function BikeManagement() {
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
                   <div>
-                    <span className="block text-stone-400 text-[10px] font-black uppercase tracking-wider mb-0.5">Frame Number</span>
-                    <span className="font-mono font-bold text-stone-700">{b.frame_no}</span>
+                    <span className="block text-stone-400 text-[10px] font-black uppercase tracking-wider mb-0.5">Plate Number</span>
+                    <span className="font-mono font-bold text-orange-600">{b.plate_no}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -273,7 +273,6 @@ export default function BikeManagement() {
                     <td className="px-8 py-5">
                       <div className="space-y-1">
                         <p className="text-sm font-bold text-stone-700">Plate: <span className="text-orange-600">{b.plate_no}</span></p>
-                        <p className="text-[10px] font-mono text-stone-400">Frame: {b.frame_no}</p>
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -342,27 +341,15 @@ export default function BikeManagement() {
                   </select>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-stone-700 ml-1">Plate Number *</label>
-                    <input 
-                      value={form.plate_no} 
-                      onChange={(e) => setForm({ ...form, plate_no: e.target.value })} 
-                      required 
-                      placeholder="WP BAX-1234"
-                      className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-stone-700 ml-1">Frame Number *</label>
-                    <input 
-                      value={form.frame_no} 
-                      onChange={(e) => setForm({ ...form, frame_no: e.target.value })} 
-                      required 
-                      placeholder="FRAME123456"
-                      className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-stone-700 ml-1">Plate Number *</label>
+                  <input 
+                    value={form.plate_no} 
+                    onChange={(e) => setForm({ ...form, plate_no: e.target.value })} 
+                    required 
+                    placeholder="WP BAX-1234"
+                    className="w-full px-5 py-4 rounded-2xl border-stone-200 bg-stone-50 focus:ring-2 focus:ring-orange-500 transition-all min-h-[56px]" 
+                  />
                 </div>
 
                 <div className="space-y-2">
