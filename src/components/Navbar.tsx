@@ -20,7 +20,6 @@ export const Navbar: React.FC<NavbarProps> = ({ isAdmin, userEmail, onLogout }) 
       ]
     : [
         { name: 'Home', href: '/' },
-        { name: 'Rent a Bike', href: '/rent' },
       ];
 
   return (
